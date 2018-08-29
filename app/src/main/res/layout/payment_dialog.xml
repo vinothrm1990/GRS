@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="180dp">
+    <LinearLayout
+        android:background="@color/colorPrimaryDark"
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/close_tv"
+            android:textColor="#FFFFFF"
+            android:drawableRight="@drawable/ic_close"
+            android:textStyle="bold"
+            android:textSize="25sp"
+            android:gravity="center"
+            android:text="Payment Mode"
+            android:layout_width="match_parent"
+            android:layout_height="50dp" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_marginBottom="15dp"
+        android:layout_marginTop="25dp"
+        android:gravity="center"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_below="@+id/header"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <RadioButton
+            android:id="@+id/cash_rad"
+            android:layout_marginRight="10dp"
+            android:gravity="center"
+            android:checked="false"
+            android:layout_weight="0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/cash_tv"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="0"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:text="Cash on Delivery"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout
+        android:gravity="center_horizontal"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/btn_confirm_order"
+            android:layout_marginBottom="5dp"
+            android:layout_alignParentBottom="true"
+            android:textSize="18sp"
+            android:text="Confirm Order"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@color/colorPrimaryDark"
+            android:layout_width="250dp"
+            android:layout_height="50dp" />
+    </LinearLayout>
+</RelativeLayout>
