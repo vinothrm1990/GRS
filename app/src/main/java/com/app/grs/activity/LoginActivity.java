@@ -15,8 +15,10 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -33,7 +35,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +59,7 @@ public class LoginActivity extends AppCompatActivity {
    private String mobile_no="";
    private ScrollView scroll_layout;
    private LinearLayout otplayout, resetlayout;
-    final private int REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS = 123;
+   final private int REQUEST_CODE_ASK_MULTIPLE_PERMISSIONS = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +124,10 @@ public class LoginActivity extends AppCompatActivity {
 
                 scroll_layout.setVisibility(View.GONE);
                 otplayout.setVisibility(View.VISIBLE);
+                etphoneotp.setVisibility(View.VISIBLE);
+                btngetotp.setVisibility(View.VISIBLE);
+                etconfirmotp.setVisibility(View.GONE);
+                btnconfirmotp.setVisibility(View.GONE);
 
             }
         });
@@ -128,30 +136,27 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if(!etphoneotp.getText().toString().equals("") && etphoneotp.getText().toString().length()>6) {
+                if(!etphoneotp.getText().toString().equals("") && etphoneotp.getText().toString().length()==10) {
                     mobile_no = etphoneotp.getText().toString().trim();
-                    // new GetOTP(getApplicationContext(), mobile_no).execute();
+                    new GetOTP(LoginActivity.this, mobile_no).execute();
                     //Toast.makeText(getApplicationContext(),"Otp sent to your mobile successfully",Toast.LENGTH_SHORT).show();
-                    try {
-                        etphoneotp.setVisibility(View.GONE);
-                        btngetotp.setVisibility(View.GONE);
-                        etconfirmotp.setVisibility(View.VISIBLE);
-                        btnconfirmotp.setVisibility(View.VISIBLE);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }else Toast.makeText(LoginActivity.this,"Check your Number!",Toast.LENGTH_SHORT).show();
+
+                }else Toast.makeText(LoginActivity.this,"Check your Mobile Number",Toast.LENGTH_SHORT).show();
 
             }
         });
+
 
         btnconfirmotp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                String otp = etconfirmotp.getText().toString().trim();
-                //   new VerifyOTP(getApplicationContext(), GetSet.getMobileno(), otp).execute();
-                new VerifyOTP(LoginActivity.this, mobile_no, "1234").execute();
+                if (!etconfirmotp.getText().toString().trim().equals("") && etconfirmotp.getText().toString().length()==5){
+                    String otp = etconfirmotp.getText().toString().trim();
+                    //   new VerifyOTP(getApplicationContext(), GetSet.getMobileno(), otp).execute();
+                    new VerifyOTP(LoginActivity.this, mobile_no, otp).execute();
+                }else Toast.makeText(LoginActivity.this,"Check your OTP",Toast.LENGTH_SHORT).show();
+
             }
         });
 
@@ -159,7 +164,23 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                new Forget_Password(LoginActivity.this,mobile_no,etconfirmnewpassword.getText().toString().trim()).execute();
+                if (!etnewpassword.getText().toString().trim().equals("")
+                        && etnewpassword.getText().toString().length()>1 &&
+                !etconfirmnewpassword.getText().toString().trim().equals("") && etnewpassword.getText().toString().length()>1){
+
+                    String npass = etnewpassword.getText().toString().trim();
+                    String cpass = etconfirmnewpassword.getText().toString().trim();
+
+                    if (npass.matches(cpass)){
+                        String password = etconfirmnewpassword.getText().toString().trim();
+                        mobile_no = etphoneotp.getText().toString().trim();
+                        new Forget_Password(LoginActivity.this,mobile_no,password).execute();
+                    }else {
+                        Toast.makeText(LoginActivity.this,"Password didn't Match!",Toast.LENGTH_SHORT).show();
+                    }
+
+                }else Toast.makeText(LoginActivity.this,"Enter Valid Password",Toast.LENGTH_SHORT).show();
+
 
             }
         });
@@ -272,8 +293,8 @@ public class LoginActivity extends AppCompatActivity {
         private Context context;
         private String mobileno, otp;
         private String url = Constants.BASE_URL + Constants.VERIFY_OTP;
-        @Nullable
-        String user_id;
+        ProgressDialog progress;
+
 
         public VerifyOTP(Context ctx, String mobileno, String otp) {
             context = ctx;
@@ -284,7 +305,12 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
+            progress = new ProgressDialog(context);
+            progress.setMessage("Please wait ....");
+            progress.setTitle("Loading");
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
+            progress.show();
         }
 
         @Nullable
@@ -326,15 +352,21 @@ public class LoginActivity extends AppCompatActivity {
                 jonj = new JSONObject(jsonData);
                 if (jonj.getString("status").equalsIgnoreCase(
                         "success")) {
+                    progress.dismiss();
                     scroll_layout.setVisibility(View.GONE);
                     otplayout.setVisibility(View.GONE);
                     resetlayout.setVisibility(View.VISIBLE);
-                }else Toast.makeText(getApplicationContext(),"Otp not verified",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                }else if (jonj.getString("status").equalsIgnoreCase(
+                        "failed")){
+                    Toast.makeText(getApplicationContext(),jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
     }
+
 
 
     public class Login_Async extends AsyncTask<String, Integer, String> {
@@ -360,6 +392,7 @@ public class LoginActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -438,6 +471,7 @@ public class LoginActivity extends AppCompatActivity {
         private Context context;
         private String mobileno,password;
         private String url = Constants.BASE_URL + Constants.FORGOT_PASSWORD;
+        ProgressDialog progress;
 
         public Forget_Password(Context ctx, String mobileno,String password) {
             context = ctx;
@@ -448,7 +482,12 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-
+            progress = new ProgressDialog(context);
+            progress.setMessage("Please wait ....");
+            progress.setTitle("Loading");
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
+            progress.show();
         }
 
         @Nullable
@@ -490,12 +529,23 @@ public class LoginActivity extends AppCompatActivity {
                 jonj = new JSONObject(jsonData);
                 if (jonj.getString("status").equalsIgnoreCase(
                         "success")) {
+                    progress.dismiss();
                     Intent intent=new Intent(context,LoginActivity.class);
                     startActivity(intent);
                     finish();
                     Toast.makeText(getApplicationContext(),"Password Changed Successfully!",Toast.LENGTH_SHORT).show();
 
-                }else Toast.makeText(getApplicationContext(),jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                }else if (jonj.getString("status").equalsIgnoreCase(
+                        "failed")){
+                    progress.dismiss();
+                    Toast.makeText(getApplicationContext(),jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                }
+
+                else if (jonj.getString("status").equalsIgnoreCase(
+                        "empty")){
+                    progress.dismiss();
+                    Toast.makeText(getApplicationContext(),jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -526,4 +576,78 @@ public class LoginActivity extends AppCompatActivity {
             alertDialog.show();
         }
     }
+
+    public class GetOTP extends AsyncTask<String, Integer, String> {
+
+        private Context context;
+        private String mobileno;
+        private String url = Constants.BASE_URL + Constants.GET_OTP;
+        ProgressDialog progress;
+
+        public GetOTP(Context ctx, String mobileno) {
+
+            context = ctx;
+            this.mobileno = mobileno;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progress = new ProgressDialog(context);
+            progress.setMessage("Please wait ....");
+            progress.setTitle("Loading");
+            progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
+            progress.show();
+        }
+
+        @Nullable
+        @Override
+        protected String doInBackground(String... params) {
+            String jsonData = null;
+            Response response = null;
+            OkHttpClient client = new OkHttpClient();
+            RequestBody body = new FormBody.Builder()
+                    .add("mobile", mobileno)
+                    .build();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .build();
+            Call call = client.newCall(request);
+
+            try {
+                response = call.execute();
+
+                if (response.isSuccessful()) {
+                    jsonData = response.body().string();
+                } else {
+                    jsonData = null;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return jsonData;
+        }
+
+        @Override
+        protected void onPostExecute(String jsonData) {
+            super.onPostExecute(jsonData);
+            progress.dismiss();
+
+            etphoneotp.setVisibility(View.GONE);
+            btngetotp.setVisibility(View.GONE);
+            etconfirmotp.setVisibility(View.VISIBLE);
+            btnconfirmotp.setVisibility(View.VISIBLE);
+            Toast.makeText(getApplicationContext(),"OTP has sent to your Mobile Number Successfully",Toast.LENGTH_SHORT).show();
+
+        }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
 }

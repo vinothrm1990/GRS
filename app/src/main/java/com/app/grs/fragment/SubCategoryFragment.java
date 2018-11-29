@@ -26,9 +26,11 @@ import android.widget.Toast;
 
 import com.app.grs.R;
 import com.app.grs.activity.HomeActivity;
+import com.app.grs.activity.MyCartActivity;
 import com.app.grs.adapter.CategoryAdapter;
 import com.app.grs.adapter.SubCategoryAdapter;
 import com.app.grs.helper.Constants;
+import com.app.grs.helper.GRS;
 import com.app.grs.helper.GetSet;
 
 import org.json.JSONArray;
@@ -36,7 +38,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import okhttp3.Call;
@@ -57,8 +61,11 @@ public class SubCategoryFragment extends Fragment {
     private ArrayList<HashMap<String,String>> subcategoryList=new ArrayList<HashMap<String, String>>();
     RecyclerView.LayoutManager mLayoutManager;
     String catname = "";
+    String categoryname;
     TextView textItemCount;
     int numItemCount;
+    SimpleDateFormat sdf;
+    Date now;
 
     public SubCategoryFragment() {
         // Required empty public constructor
@@ -76,18 +83,24 @@ public class SubCategoryFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_sub_category, container, false);
 
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(catname);
+        Bundle bundle = getArguments();
+        if (bundle != null){
+            categoryname = bundle.getString("catname");
+        }
+
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(categoryname);
 
         Constants.pref = getActivity().getSharedPreferences("GRS",Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
 
         subcategoryList.clear();
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
         String cusid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(getActivity(), cusid).execute();
 
-        numItemCount = Constants.pref.getInt("count", 0);
-        setBadge();
+        new fetchCartCount(getActivity(), cusid, timestamp).execute();
 
         catname = getArguments().getString("catname");
         new fetchSubCategory(getActivity(), catname).execute();
@@ -103,6 +116,7 @@ public class SubCategoryFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Do something that differs the Activity's menu here
+        inflater.inflate(R.menu.home, menu);
         super.onCreateOptionsMenu(menu, inflater);
 
         MenuItem menuItem = menu.findItem(R.id.action_cart);
@@ -110,17 +124,26 @@ public class SubCategoryFragment extends Fragment {
         textItemCount = cart.findViewById(R.id.cart_badge);
         setBadge();
 
+        cart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent i = new Intent(getActivity(), MyCartActivity.class);
+                startActivity(i);
+            }
+
+        });
     }
 
     private void setBadge() {
 
         if (textItemCount != null) {
-            if (numItemCount == 0) {
+            if (Constants.numItemCount == 0) {
                 if (textItemCount.getVisibility() != View.GONE) {
                     textItemCount.setVisibility(View.GONE);
                 }
             } else {
-                textItemCount.setText(String.valueOf(Math.min(numItemCount, 99)));
+                textItemCount.setText(String.valueOf(Math.min(Constants.numItemCount, 99)));
                 if (textItemCount.getVisibility() != View.VISIBLE) {
                     textItemCount.setVisibility(View.VISIBLE);
                 }
@@ -128,16 +151,37 @@ public class SubCategoryFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        String cusid = Constants.pref.getString("mobileno", "");
+        new fetchCartCount(getActivity(), cusid, timestamp).execute();
+
+        GRS.registerReceiver(getActivity());
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // For Internet disconnect checking
+        GRS.unregisterReceiver(getActivity());
+    }
+
     private class fetchCartCount extends AsyncTask<String, Integer, String>{
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String cusid;
+        String cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -159,6 +203,7 @@ public class SubCategoryFragment extends Fragment {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -187,19 +232,34 @@ public class SubCategoryFragment extends Fragment {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                    numItemCount = Constants.pref.getInt("count", 0);
-                    setBadge();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")) {
+
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                        //Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -214,7 +274,7 @@ public class SubCategoryFragment extends Fragment {
         String catname;
         ProgressDialog progress;
         HashMap<String,String> map;
-        String subcatid, subcatimgpath, subcatimgname, subcatname;
+        String subcatid, subcatimage, subcatname;
 
         public fetchSubCategory(Context context, String catname) {
             this.context = context;
@@ -229,6 +289,7 @@ public class SubCategoryFragment extends Fragment {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -280,14 +341,12 @@ public class SubCategoryFragment extends Fragment {
                             map = new HashMap<String, String>();
 
                             subcatid = jcat.getString("id");
-                            subcatimgpath = jcat.getString("subcat_img_url");
-                            subcatimgname = jcat.getString("subcat_img_name");
-                            subcatname = jcat.getString("sub_cat");
+                            subcatimage = jcat.getString("image");
+                            subcatname = jcat.getString("sub_product");
 
                             map.put("id", subcatid);
-                            map.put("subcat_img_url", subcatimgpath);
-                            map.put("subcat_img_name", subcatimgname);
-                            map.put("sub_cat", subcatname);
+                            map.put("image", subcatimage);
+                            map.put("sub_product", subcatname);
                             subcategoryList.add(map);
                         }
 

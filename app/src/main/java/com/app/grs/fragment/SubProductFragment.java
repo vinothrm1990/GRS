@@ -1,6 +1,7 @@
 package com.app.grs.fragment;
 
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -102,15 +103,6 @@ public class SubProductFragment extends Fragment{
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-
-        Constants.pref = getActivity().getSharedPreferences("GRS",Context.MODE_PRIVATE);
-        Constants.editor = Constants.pref.edit();
-
-        custid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(getActivity(), custid).execute();
-
-        numItemCount = Constants.pref.getInt("count", 0);
-        setBadge();
     }
 
     @Override
@@ -143,6 +135,11 @@ public class SubProductFragment extends Fragment{
         Constants.editor = Constants.pref.edit();
 
         custid = Constants.pref.getString("mobileno", "");
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+
+        new fetchCartCount(getActivity(), custid, timestamp).execute();
 
         btncart = view.findViewById(R.id.btn_addtocart);
         btnbuy = view.findViewById(R.id.btn_buynow);
@@ -150,7 +147,6 @@ public class SubProductFragment extends Fragment{
         tvproprice = view.findViewById(R.id.subproductprice_tv);
         tvprodesc = view.findViewById(R.id.subproductdesc_tv);
         btnrate = view.findViewById(R.id.ratenow_btn);
-      /*tvtotalrating = view.findViewById(R.id.overall_rating_tv);*/
         tvnoreview = view.findViewById(R.id.tv_no_review);
         empty_heart = view.findViewById(R.id.unchecked_fav_layout);
         filled_heart = view.findViewById(R.id.checked_fav_layout);
@@ -159,8 +155,9 @@ public class SubProductFragment extends Fragment{
         tvproname.setText(proname);
         tvproprice.setText("₹\t" + proprice);
         tvprodesc.setText(prodesc);
+        tvproname.setSelected(true);
 
-        new fetchSubProducts(getActivity(), proid, custid).execute();
+        new fetchSubProducts(getActivity(), proid, custid, timestamp).execute();
         new fetchReview(getActivity(), proid).execute();
 
         recyclerView = view.findViewById(R.id.rv_rate);
@@ -179,7 +176,7 @@ public class SubProductFragment extends Fragment{
                 int flag = 1;
                 new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
                 Constants.cart="1";
-                new fetchCartCount(getActivity(), custid).execute();
+                //new fetchCartCount(getActivity(), custid, timestamp).execute();
                 startActivity(new Intent(getActivity(), MyCartActivity.class));
 
             }
@@ -226,16 +223,16 @@ public class SubProductFragment extends Fragment{
                     new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
-                    new fetchCartCount(getActivity(), custid).execute();
+                    new fetchCartCount(getActivity(), custid, timestamp).execute();
 
                 }else if (Constants.cart.equals("1")){
+
 
                     int flag = 0;
                     new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
-                    new fetchCartCount(getActivity(), custid).execute();
-
+                    new fetchCartCount(getActivity(), custid, timestamp).execute();
 
                 }
             }
@@ -248,7 +245,11 @@ public class SubProductFragment extends Fragment{
     public void onResume() {
         super.onResume();
         // For Internet checking
-
+        custid = Constants.pref.getString("mobileno", "");
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        new fetchCartCount(getActivity(), custid, timestamp).execute();
         GRS.registerReceiver(getActivity());
     }
 
@@ -291,7 +292,7 @@ public class SubProductFragment extends Fragment{
                     String review = etreview.getText().toString().trim();
                     new postRating(getActivity(), proid, custid, rate, review, timestamp).execute();
                     new fetchReview(getActivity(), proid).execute();
-                    new fetchSubProducts(getActivity(), proid, custid).execute();
+                    new fetchSubProducts(getActivity(), proid, custid, timestamp).execute();
 
                 }
             });
@@ -313,6 +314,7 @@ public class SubProductFragment extends Fragment{
     @Override
     public void onCreateOptionsMenu(Menu menu,MenuInflater inflater) {
         // Do something that differs the Activity's menu here
+        inflater.inflate(R.menu.home, menu);
         super.onCreateOptionsMenu(menu, inflater);
 
         MenuItem menuItem = menu.findItem(R.id.action_cart);
@@ -320,17 +322,26 @@ public class SubProductFragment extends Fragment{
         textItemCount = cart.findViewById(R.id.cart_badge);
         setBadge();
 
+        cart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent i = new Intent(getActivity(), MyCartActivity.class);
+                startActivity(i);
+            }
+
+        });
     }
 
     private void setBadge() {
 
         if (textItemCount != null) {
-            if (numItemCount == 0) {
+            if (Constants.numItemCount == 0) {
                 if (textItemCount.getVisibility() != View.GONE) {
                     textItemCount.setVisibility(View.GONE);
                 }
             } else {
-                textItemCount.setText(String.valueOf(Math.min(numItemCount, 99)));
+                textItemCount.setText(String.valueOf(Math.min(Constants.numItemCount, 99)));
                 if (textItemCount.getVisibility() != View.VISIBLE) {
                     textItemCount.setVisibility(View.VISIBLE);
                 }
@@ -410,16 +421,18 @@ public class SubProductFragment extends Fragment{
                 if (jonj.getString("status").equalsIgnoreCase(
                         "Inserted")) {
 
-                    new fetchCartCount(context, cusid).execute();
+                    new fetchCartCount(context, cusid, date).execute();
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
 
                 }else if (jonj.getString("status").equalsIgnoreCase(
                         "Already"))
                 {
+                    btncart.setText("REMOVE FROM CART");
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    new fetchCartCount(context, cusid).execute();
+
+                    new fetchCartCount(context, cusid, date).execute();
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
 
                 }
@@ -430,16 +443,18 @@ public class SubProductFragment extends Fragment{
         }
     }
 
+
     private class fetchCartCount extends AsyncTask<String, Integer, String>{
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String cusid;
+        String cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -461,6 +476,7 @@ public class SubProductFragment extends Fragment{
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -489,19 +505,33 @@ public class SubProductFragment extends Fragment{
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
 
-                    numItemCount = Constants.pref.getInt("count", 0);
-                    setBadge();
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")) {
+
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                        //Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -704,6 +734,8 @@ public class SubProductFragment extends Fragment{
                     } else {
                         recyclerView.setVisibility(View.GONE);
                         tvnoreview.setVisibility(View.VISIBLE);
+                        btnrate.setEnabled(true);
+                        btnrate.setText("RATE NOW");
                     }
                 }else {
                     Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
@@ -719,13 +751,14 @@ public class SubProductFragment extends Fragment{
 
         Context context;
         String url = Constants.BASE_URL + Constants.SUBPRODUCT;
-        String proid, cusid;
+        String proid, cusid, date;
         ProgressDialog progress;
 
-        public fetchSubProducts(Context context, String proid, String cusid) {
+        public fetchSubProducts(Context context, String proid, String cusid, String date) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -736,6 +769,7 @@ public class SubProductFragment extends Fragment{
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -746,8 +780,9 @@ public class SubProductFragment extends Fragment{
             Response response = null;
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
-                    .add("product_id", proid)
                     .add("customer_id", cusid)
+                    .add("product_id", proid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -807,11 +842,11 @@ public class SubProductFragment extends Fragment{
 
                     } else {
 
-                        Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
                     }
                 }else {
 
-                    Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
 
                 }
             }catch (JSONException e) {

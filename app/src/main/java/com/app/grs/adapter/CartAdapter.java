@@ -2,7 +2,6 @@ package com.app.grs.adapter;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
@@ -14,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,12 +36,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import static android.content.Context.MODE_PRIVATE;
 import static com.app.grs.activity.MyCartActivity.grandTotal;
-import static com.app.grs.activity.MyCartActivity.total;
 
 public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> {
 
-    private Context mContext;
-    ArrayList<HashMap<String,String>> cartList;
+    public Context mContext;
+    public static ArrayList<HashMap<String,String>> cartList;
     HashMap<String, String> map;
     OnDataChangeListener mOnDataChangeListener;
 
@@ -55,6 +52,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         mOnDataChangeListener = onDataChangeListener;
         mContext=context;
     }
+
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -129,17 +127,15 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
                if(mOnDataChangeListener != null){
                     //total += Integer.parseInt(totalprice);
 
-                    mOnDataChangeListener.onDataChanged( grandTotal());
+                   mOnDataChangeListener.onDataChanged(grandTotal());
 
+                   Constants.pref = mContext.getSharedPreferences("GRS",MODE_PRIVATE);
+                   String cusid = Constants.pref.getString("mobileno", "");
+                   String proid = itemmap.get("id");
 
+                   new addQuatity(mContext, cusid, proid, selectedItem).execute();
                 }
 
-                Constants.pref = mContext.getSharedPreferences("GRS",MODE_PRIVATE);
-
-                String cusid = Constants.pref.getString("mobileno", "");
-                String proid = itemmap.get("id");
-
-                new addQuatity(mContext, cusid, proid, selectedItem).execute();
             }
 
             @Override
@@ -149,7 +145,6 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         });
 
     }
-
 
     @Override
     public int getItemCount() {
@@ -161,7 +156,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         public TextView productName, productPrice, totalPrice;
         public ImageView productImage;
         public CardView cardView;
-        public LinearLayout deleteLayout;
+        public ImageView deleteLayout;
         public Spinner spinner;
 
         public MyViewHolder(View itemView) {
@@ -177,6 +172,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
 
         }
     }
+
+    /*public void clear() {
+        cartList.clear();
+        notifyDataSetChanged();
+    }*/
 
     private class deleteCart extends AsyncTask<String, Integer, String> {
 
@@ -244,6 +244,8 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
                 if (jonj.getString("status").equalsIgnoreCase(
                         "Deleted")) {
 
+                    mOnDataChangeListener.onDataChanged(grandTotal());
+                    MyCartActivity.cartList();
                     Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
 
                 }else
@@ -262,7 +264,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         private Context context;
         public String cusid, proid, qty;
         private String url = Constants.BASE_URL + Constants.ADD_QUANTITY;
-        ProgressDialog progress;
+        /*ProgressDialog progress;*/
 
         public addQuatity(Context context, String cusid, String proid, String qty) {
             this.context = context;
@@ -274,11 +276,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progress = new ProgressDialog(context);
+          /* progress = new ProgressDialog(context);
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progress.show();
+            progress.show();*/
         }
 
         @Override
@@ -315,7 +317,7 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         @Override
         protected void onPostExecute(String jsonData) {
             super.onPostExecute(jsonData);
-            progress.dismiss();
+           /* progress.dismiss();*/
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
@@ -323,11 +325,11 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
                 if (jonj.getString("status").equalsIgnoreCase(
                         "success")) {
 
-                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
 
                 }else
                 {
-                    Toast.makeText(context,jonj.getString("data"),Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(context,jonj.getString("data"),Toast.LENGTH_SHORT).show();
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

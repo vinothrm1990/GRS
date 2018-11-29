@@ -4,8 +4,6 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,14 +11,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.app.grs.R;
 import com.app.grs.adapter.CartAdapter;
-import com.app.grs.adapter.WishlistAdapter;
-import com.app.grs.fragment.HomeFragment;
-import com.app.grs.fragment.SubProductFragment;
 import com.app.grs.helper.Constants;
 import com.app.grs.helper.GRS;
 import com.app.grs.helper.OnDataChangeListener;
@@ -49,11 +47,15 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
     public static ArrayList<HashMap<String,String>> cartList=new ArrayList<HashMap<String, String>>();
     RecyclerView.LayoutManager mLayoutManager;
     Button btnCheckout;
-    public TextView subtotalview;
+    public static ImageView empty;
+    public static TextView subtotalview, nodata;
     public static int total;
     private String cartid;
     SimpleDateFormat sdf;
     Date now;
+    static ScrollView scrollLayout;
+    static LinearLayout btnLayout;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +72,10 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
         recyclerView.setLayoutManager(mLayoutManager);
         btnCheckout = findViewById(R.id.btn_cart_checkout);
         subtotalview = findViewById(R.id.subtotal);
+        nodata = findViewById(R.id.no_data);
+        empty = findViewById(R.id.no_cart);
+        scrollLayout = findViewById(R.id.scroll_layout);
+        btnLayout = findViewById(R.id.btn_layout);
 
         now = new Date();
         sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -87,6 +93,13 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
 
             }
         });
+
+        /*if (cartList.size()==0){
+            nodata.setVisibility(View.VISIBLE);
+            empty.setVisibility(View.VISIBLE);
+            scrollLayout.setVisibility(View.GONE);
+            btnLayout.setVisibility(View.GONE);
+        }*/
     }
 
     public static int grandTotal(){
@@ -104,6 +117,16 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
     protected void onResume() {
         super.onResume();
         // For Internet checking
+        Constants.pref = getSharedPreferences("GRS", Context.MODE_PRIVATE);
+        Constants.editor = Constants.pref.edit();
+
+        String cusid = Constants.pref.getString("mobileno", "");
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+
+        new fetchCart(MyCartActivity.this, cusid, timestamp).execute();
+        onDataChanged(total);
         GRS.registerReceiver(MyCartActivity.this);
     }
 
@@ -111,6 +134,15 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
     protected void onPause() {
         super.onPause();
         // For Internet disconnect checking
+        Constants.pref = getSharedPreferences("GRS", Context.MODE_PRIVATE);
+        Constants.editor = Constants.pref.edit();
+
+        String cusid = Constants.pref.getString("mobileno", "");
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+
+        new fetchCart(MyCartActivity.this, cusid, timestamp).execute();
         GRS.unregisterReceiver(MyCartActivity.this);
     }
 
@@ -119,15 +151,31 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
         subtotalview.setText("₹\t" + String.valueOf(total));
     }
 
+    public static void cartList(){
+        if (cartList.size()==0){
+            nodata.setVisibility(View.VISIBLE);
+            empty.setVisibility(View.VISIBLE);
+            scrollLayout.setVisibility(View.GONE);
+            btnLayout.setVisibility(View.GONE);
+        }else {
+            nodata.setVisibility(View.GONE);
+            empty.setVisibility(View.GONE);
+            scrollLayout.setVisibility(View.VISIBLE);
+            btnLayout.setVisibility(View.VISIBLE);
+
+        }
+    }
+
 
     private class fetchCart extends AsyncTask<String, Integer, String>{
 
-        private Context context;
+        public Context context;
         String date;
-        private String cusid, proid, proname, proimage, proprice, prodesc, flag;
-        private String url = Constants.BASE_URL + Constants.GET_CART;
+        public String cusid, proid, proname, proimage, proprice, prodesc, flag;
+        public String url = Constants.BASE_URL + Constants.GET_CART;
         ProgressDialog progress;
         HashMap<String,String> map;
+        String data;
 
         public fetchCart(Context context, String cusid, String date) {
             this.context = context;
@@ -142,6 +190,7 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -188,7 +237,7 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
                     if (jonj.getString("status").equalsIgnoreCase(
                             "success")) {
 
-                        String data = jonj.getString("data");
+                        data = jonj.getString("data");
                         JSONArray array = new JSONArray(data);
                         for (int i = 0; i < array.length(); i++) {
                             JSONObject jcat = array.getJSONObject(i);
@@ -220,8 +269,20 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
                         recyclerView.setAdapter(cartAdapter);
                         cartAdapter.setOnDataChangeListener(MyCartActivity.this,MyCartActivity.this);
 
-                    } else {
-                        Toast.makeText(getApplicationContext(), jonj.getString("message"), Toast.LENGTH_SHORT).show();
+                        nodata.setVisibility(View.GONE);
+                        empty.setVisibility(View.GONE);
+                        scrollLayout.setVisibility(View.VISIBLE);
+                        btnLayout.setVisibility(View.VISIBLE);
+
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")){
+
+                        nodata.setVisibility(View.VISIBLE);
+                        empty.setVisibility(View.VISIBLE);
+                        scrollLayout.setVisibility(View.GONE);
+                        btnLayout.setVisibility(View.GONE);
+
+                        //Toast.makeText(getApplicationContext(), jonj.getString("data"), Toast.LENGTH_SHORT).show();
                     }
                 }
             }catch (JSONException e) {
@@ -256,6 +317,7 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -325,6 +387,7 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
                             bundle.putString("post_code", badd1);
                             bundle.putString("address1", badd2);
                             bundle.putString("cartid", cartid);
+                            bundle.putString("subtotal", String.valueOf(grandTotal()));
 
                            Intent intent = new Intent(context, CheckoutActivity.class);
                            intent.putExtras(bundle);
@@ -340,4 +403,11 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
             }
         }
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
 }

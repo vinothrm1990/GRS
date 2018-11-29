@@ -28,7 +28,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import okhttp3.Call;
@@ -45,7 +47,8 @@ public class MyWishListActivity extends AppCompatActivity {
     private ArrayList<HashMap<String,String>> wishlistList=new ArrayList<HashMap<String, String>>();
     RecyclerView.LayoutManager mLayoutManager;
     TextView textItemCount;
-    int numItemCount;
+    SimpleDateFormat sdf;
+    Date now;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,13 +56,19 @@ public class MyWishListActivity extends AppCompatActivity {
         getSupportActionBar().setTitle("My Wishlists");
         setContentView(R.layout.activity_my_wish_list);
 
+        Constants.pref = getSharedPreferences("GRS",Context.MODE_PRIVATE);
+        Constants.editor = Constants.pref.edit();
+
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+
         String cusid = Constants.pref.getString("mobileno", "");
         recyclerView = findViewById(R.id.rv_wishlist);
         mLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(mLayoutManager);
 
-        new fetchCartCount(this, cusid).execute();
-        numItemCount = Constants.pref.getInt("count", 0);
+        new fetchCartCount(this, cusid, timestamp).execute();
         wishlistList.clear();
         new fetchWishlist(MyWishListActivity.this, cusid).execute();
 
@@ -91,12 +100,12 @@ public class MyWishListActivity extends AppCompatActivity {
     private void setBadge() {
 
         if (textItemCount != null) {
-            if (numItemCount == 0) {
+            if (Constants.numItemCount == 0) {
                 if (textItemCount.getVisibility() != View.GONE) {
                     textItemCount.setVisibility(View.GONE);
                 }
             } else {
-                textItemCount.setText(String.valueOf(Math.min(numItemCount, 99)));
+                textItemCount.setText(String.valueOf(Math.min(Constants.numItemCount, 99)));
                 if (textItemCount.getVisibility() != View.VISIBLE) {
                     textItemCount.setVisibility(View.VISIBLE);
                 }
@@ -108,7 +117,11 @@ public class MyWishListActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // For Internet checking
-        setBadge();
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        String custid = Constants.pref.getString("mobileno", "");
+        new fetchCartCount(this, custid, timestamp).execute();
         GRS.registerReceiver(MyWishListActivity.this);
     }
 
@@ -123,12 +136,13 @@ public class MyWishListActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String  cusid;
+        String  cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -150,6 +164,7 @@ public class MyWishListActivity extends AppCompatActivity {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -178,17 +193,32 @@ public class MyWishListActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
 
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")) {
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                        //Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -216,6 +246,7 @@ public class MyWishListActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -251,7 +282,6 @@ public class MyWishListActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String jsonData) {
             super.onPostExecute(jsonData);
-            progress.dismiss();
             progress.dismiss();
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
@@ -298,4 +328,11 @@ public class MyWishListActivity extends AppCompatActivity {
         }
 
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
 }

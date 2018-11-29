@@ -485,6 +485,7 @@ public class MyAccountActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
 
         }
@@ -598,4 +599,11 @@ public class MyAccountActivity extends AppCompatActivity {
         etaddress2.setText(GetSet.getAddress2());
 
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
 }

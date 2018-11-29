@@ -63,7 +63,7 @@ public class DiscoverAdapter2 extends RecyclerView.Adapter<DiscoverAdapter2.MyVi
                 myFragment.setArguments(bundle);
                 activity.getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment).addToBackStack(null).commit();
 
-                Toast.makeText(mContext, "You have selected :\t" + itemmap.get("cat"), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(mContext, "You have selected :\t" + itemmap.get("cat"), Toast.LENGTH_SHORT).show();
             }
         });
     }

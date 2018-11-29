@@ -11,11 +11,12 @@
             <de.hdodenhof.circleimageview.CircleImageView
                 android:src="@drawable/noimage"
                 android:id="@+id/discover_iv1"
+                app:civ_border_color="#10000000"
                 app:civ_border_width="2dp"
                 app:civ_border_overlay="false"
-                android:layout_width="100dp"
+                android:layout_width="95dp"
                 android:layout_centerHorizontal="true"
-                android:layout_height="100dp" />
+                android:layout_height="95dp" />
                 <TextView
                     android:layout_marginTop="5dp"
                     android:layout_marginBottom="5dp"

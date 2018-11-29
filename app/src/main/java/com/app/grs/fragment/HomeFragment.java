@@ -2,6 +2,7 @@ package com.app.grs.fragment;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.nfc.tech.NfcA;
@@ -17,6 +18,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SnapHelper;
 import android.util.Log;
 import android.view.Gravity;
@@ -31,19 +33,24 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.app.grs.R;
 import com.app.grs.activity.FeaturedAllActivity;
+import com.app.grs.activity.HomeActivity;
+import com.app.grs.activity.MyCartActivity;
 import com.app.grs.adapter.DiscoverAdapter1;
 import com.app.grs.adapter.DiscoverAdapter2;
 import com.app.grs.adapter.DiscoverAdapter3;
 import com.app.grs.adapter.FeaturedAdapter;
 import com.app.grs.adapter.SliderAdapter;
 import com.app.grs.helper.Constants;
+import com.app.grs.helper.GRS;
 import com.app.grs.pager.AutoScrollViewPager;
 import com.jcodecraeer.xrecyclerview.XRecyclerView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import me.relex.circleindicator.CircleIndicator;
 import okhttp3.Call;
@@ -66,11 +73,14 @@ public class HomeFragment extends Fragment {
     DiscoverAdapter2 discoverAdapter2;
     DiscoverAdapter3 discoverAdapter3;
     TextView textItemCount, featured_all;
-    int numItemCount;
     LinearLayoutManager linearLayoutManager1, linearLayoutManager2, linearLayoutManager3, featureLayoutManager;
     AutoScrollViewPager viewPager;
     PagerAdapter adapter;
     CircleIndicator indicator;
+    SimpleDateFormat sdf;
+    Date now;
+    private SearchView searchView = null;
+    private static boolean isSearchView = false;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -79,6 +89,8 @@ public class HomeFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+
         setHasOptionsMenu(true);
 
     }
@@ -94,25 +106,26 @@ public class HomeFragment extends Fragment {
         Constants.pref = getActivity().getSharedPreferences("GRS", Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
 
-        String cusid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(getActivity(), cusid).execute();
-        numItemCount = Constants.pref.getInt("count", 0);
-        setBadge();
-
         viewPager = view.findViewById(R.id.pager);
         indicator = view.findViewById(R.id.indicator);
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        String cusid = Constants.pref.getString("mobileno", "");
+
+        new fetchCartCount(getActivity(), cusid, timestamp).execute();
+
         new fetchBanner(getActivity()).execute();
 
-        linearLayoutManager1 = new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+        linearLayoutManager1 = new GridLayoutManager(getActivity(),3);
         rv_discover1 = view.findViewById(R.id.rv_discover1);
         rv_discover1.setLayoutManager(linearLayoutManager1);
         new fetchDiscover1(getActivity()).execute();
         discoverAdapter1 = new DiscoverAdapter1(getActivity(), discoverList1);
         rv_discover1.setAdapter(discoverAdapter1);
 
-
-        linearLayoutManager2 = new LinearLayoutManager(getActivity());
+        /*linearLayoutManager2 = new LinearLayoutManager(getActivity());
         linearLayoutManager2.setOrientation(LinearLayoutManager.HORIZONTAL);
         rv_discover2 = view.findViewById(R.id.rv_discover2);
         rv_discover2.setLayoutManager(linearLayoutManager2);
@@ -125,9 +138,9 @@ public class HomeFragment extends Fragment {
         rv_discover3.setLayoutManager(linearLayoutManager3);
         new fetchDiscover3(getActivity()).execute();
         discoverAdapter3 = new DiscoverAdapter3(getActivity(), discoverList3);
-        rv_discover3.setAdapter(discoverAdapter3);
+        rv_discover3.setAdapter(discoverAdapter3);*/
 
-        featureLayoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false);
+        featureLayoutManager = new GridLayoutManager(getActivity(), 2);
         rv_featured = view.findViewById(R.id.rv_featured);
         rv_featured.setLayoutManager(featureLayoutManager);
         new fetchFeatured(getActivity()).execute();
@@ -151,13 +164,25 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
         String cusid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(getActivity(), cusid).execute();
+        new fetchCartCount(getActivity(), cusid, timestamp).execute();
+        GRS.registerReceiver(getActivity());
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        // For Internet disconnect checking
+        GRS.unregisterReceiver(getActivity());
+    }
+
+   @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Do something that differs the Activity's menu here
+        inflater.inflate(R.menu.home, menu);
         super.onCreateOptionsMenu(menu, inflater);
 
         MenuItem menuItem1 = menu.findItem(R.id.action_cart);
@@ -165,17 +190,27 @@ public class HomeFragment extends Fragment {
         textItemCount = cart.findViewById(R.id.cart_badge);
         setBadge();
 
-    }
+       cart.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View view) {
+
+               Intent i = new Intent(getActivity(), MyCartActivity.class);
+               startActivity(i);
+           }
+
+       });
+
+     }
 
     private void setBadge() {
 
         if (textItemCount != null) {
-            if (numItemCount == 0) {
+            if (Constants.numItemCount == 0) {
                 if (textItemCount.getVisibility() != View.GONE) {
                     textItemCount.setVisibility(View.GONE);
                 }
             } else {
-                textItemCount.setText(String.valueOf(Math.min(numItemCount, 99)));
+                textItemCount.setText(String.valueOf(Math.min(Constants.numItemCount, 99)));
                 if (textItemCount.getVisibility() != View.VISIBLE) {
                     textItemCount.setVisibility(View.VISIBLE);
                 }
@@ -187,12 +222,13 @@ public class HomeFragment extends Fragment {
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String cusid;
+        String cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -214,6 +250,7 @@ public class HomeFragment extends Fragment {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -242,19 +279,34 @@ public class HomeFragment extends Fragment {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                    numItemCount = Constants.pref.getInt("count", 0);
-                    setBadge();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")) {
+
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                        //Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    Toast.makeText(context, "Something went Wrong", Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }

@@ -60,4 +60,24 @@ public class SplashActivity extends AppCompatActivity {
             alertDialog.show();
         }
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // For Internet checking
+        GRS.registerReceiver(SplashActivity.this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // For Internet disconnect checking
+        GRS.unregisterReceiver(SplashActivity.this);
+    }
 }

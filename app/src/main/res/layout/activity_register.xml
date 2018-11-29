@@ -128,7 +128,7 @@
                     android:id="@+id/reg_tv_backtologin"
                     android:gravity="center"
                     android:textSize="15sp"
-                    android:text="Already Registered, go back to Login"
+                    android:text="Already Registered?"
                     android:layout_weight="1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
@@ -167,6 +167,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:ems="10"
+                android:enabled="false"
+                android:text="1234"
                 android:hint="Enter OTP"
                 app:libIZO_clearIconTint="#808080"
                 app:libIZO_setBorderColor="@color/colorPrimary"

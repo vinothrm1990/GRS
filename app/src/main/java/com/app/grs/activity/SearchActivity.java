@@ -23,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.app.grs.R;
 import com.app.grs.adapter.ReviewAdapter;
+import com.app.grs.fragment.SubProductFragment;
 import com.app.grs.helper.Constants;
 import com.app.grs.helper.GRS;
 import com.app.grs.helper.GetSet;
@@ -37,6 +38,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+
+import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import okhttp3.Call;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
@@ -57,11 +60,12 @@ public class SearchActivity extends AppCompatActivity {
     String custid = "";
     TextView textItemCount;
     int numItemCount;
-    public String wish_flag, cart_flag;
+    public String wish_flag, cart_flag,rate;
     private ArrayList<HashMap<String,String>> reviewList=new ArrayList<HashMap<String, String>>();
     RecyclerView.LayoutManager mLayoutManager;
     SimpleDateFormat sdf;
     Date now;
+    private MaterialRatingBar ratingBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +78,11 @@ public class SearchActivity extends AppCompatActivity {
         Constants.pref = getSharedPreferences("GRS", Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        final String timestamp = sdf.format(now);
         custid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(this, custid).execute();
+
         numItemCount = Constants.pref.getInt("count", 0);
         proid = intent.getStringExtra("proid");
 
@@ -86,19 +93,33 @@ public class SearchActivity extends AppCompatActivity {
         tvproprice = findViewById(R.id.searchprice_tv);
         tvprodesc = findViewById(R.id.searchdesc_tv);
         btnrate = findViewById(R.id.search_ratenow_btn);
-        tvtotalrating = findViewById(R.id.search_overall_rating_tv);
         tvnoreview = findViewById(R.id.search_tv_no_review);
         empty_heart = findViewById(R.id.search_unchecked_fav_layout);
         filled_heart = findViewById(R.id.search_checked_fav_layout);
+        ratingBar = findViewById(R.id.search_overall_rating_tv);
 
         recyclerView = findViewById(R.id.search_rv_rate);
         mLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(mLayoutManager);
 
-        new fetchSubProducts(this, proid, custid).execute();
+        new fetchSubProducts(this, proid, custid, timestamp).execute();
         new fetchReview(this, proid).execute();
 
+        btnbuy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
+                now = new Date();
+                sdf = new SimpleDateFormat("yyyy-MM-dd");
+                String timestamp = sdf.format(now);
+
+                int flag = 1;
+                new addtoCart(SearchActivity.this, proid, custid, flag, timestamp).execute();
+                Constants.cart="1";
+                new fetchCartCount(SearchActivity.this, custid, timestamp).execute();
+                startActivity(new Intent(SearchActivity.this, MyCartActivity.class));
+            }
+        });
         btnrate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -130,19 +151,26 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                now = new Date();
+                sdf = new SimpleDateFormat("yyyy-MM-dd");
+                String timestamp = sdf.format(now);
+
                 if (Constants.cart.equals("0")){
 
                     int flag = 1;
-                    new addtoCart(SearchActivity.this, proid, custid, flag).execute();
+                    new addtoCart(SearchActivity.this, proid, custid, flag,timestamp).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
+                    new fetchCartCount(SearchActivity.this, custid, timestamp).execute();
 
                 }else if (Constants.cart.equals("1")){
 
                     int flag = 0;
-                    new addtoCart(SearchActivity.this, proid, custid, flag).execute();
+                    new addtoCart(SearchActivity.this, proid, custid, flag, timestamp).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
+                    new fetchCartCount(SearchActivity.this, custid, timestamp).execute();
+
 
                 }
             }
@@ -192,6 +220,11 @@ public class SearchActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // For Internet checking
+        custid = Constants.pref.getString("mobileno", "");
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        new fetchCartCount(this, custid, timestamp).execute();
         GRS.registerReceiver(SearchActivity.this);
     }
 
@@ -206,12 +239,13 @@ public class SearchActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String  cusid;
+        String  cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -233,6 +267,7 @@ public class SearchActivity extends AppCompatActivity {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -261,19 +296,34 @@ public class SearchActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                    numItemCount = Constants.pref.getInt("count", 0);
-                    setBadge();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")) {
+
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                        Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -285,13 +335,14 @@ public class SearchActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.SUBPRODUCT;
-        String proid, cusid;
+        String proid, cusid, date;
         ProgressDialog progress;
 
-        public fetchSubProducts(Context context, String proid, String cusid) {
+        public fetchSubProducts(Context context, String proid, String cusid, String date) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -314,6 +365,7 @@ public class SearchActivity extends AppCompatActivity {
             RequestBody body = new FormBody.Builder()
                     .add("product_id", proid)
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -342,56 +394,53 @@ public class SearchActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
 
-                    String data = jonj.getString("data");
-                    wish_flag = jonj.getString("wish_flag");
-                    cart_flag = jonj.getString("cart_flag");
-                    JSONArray array = new JSONArray(data);
-                    JSONObject jcat = array.getJSONObject(0);
+                        String data = jonj.getString("data");
+                        wish_flag = jonj.getString("wish_flag");
+                        cart_flag = jonj.getString("cart_flag");
+                        rate = jonj.getString("rating");
+                        JSONArray array = new JSONArray(data);
+                        JSONObject jcat = array.getJSONObject(0);
 
-                    GetSet.setSubproductid(jcat.getString("id"));
-                    GetSet.setSubproductname(jcat.getString("product"));
-                    GetSet.setSubproductprice(jcat.getString("price"));
-                    GetSet.setSubproductdesc(jcat.getString("pro_desc"));
-                    GetSet.setSubproductimage(jcat.getString("image"));
-                  /*  GetSet.setSubproductrating(jcat.getString("rating"));*/
+                        GetSet.setSubproductid(jcat.getString("id"));
+                        GetSet.setSubproductname(jcat.getString("product"));
+                        GetSet.setSubproductprice(jcat.getString("price"));
+                        GetSet.setSubproductdesc(jcat.getString("pro_desc"));
+                        GetSet.setSubproductimage(jcat.getString("image"));
 
-
-                    tvproname.setText(GetSet.getSubproductname());
-                    tvproprice.setText("₹\t" + GetSet.getSubproductprice());
-                    tvprodesc.setText(GetSet.getSubproductdesc());
-                    /*tvtotalrating.setText(GetSet.getSubproductrating());*/
-                    Glide.with(context).load(Constants.IMAGE_URL + GetSet.getSubproductimage()).into(imageView);
+                        tvproname.setText(GetSet.getSubproductname());
+                        tvproprice.setText("₹\t" + GetSet.getSubproductprice());
+                        tvprodesc.setText(GetSet.getSubproductdesc());
+                        Glide.with(context).load(Constants.IMAGE_URL + GetSet.getSubproductimage()).into(imageView);
 
 
-                    if (cart_flag.equalsIgnoreCase("1")) {
-                        btncart.setText("REMOVE FROM CART");
-                    }else {
-                        btncart.setText("ADD TO CART");
+                        if (cart_flag.equalsIgnoreCase("1")) {
+                            btncart.setText("REMOVE FROM CART");
+                        } else {
+                            btncart.setText("ADD TO CART");
+                        }
+                        if (wish_flag.equalsIgnoreCase("1")) {
+                            empty_heart.setVisibility(View.GONE);
+                            filled_heart.setVisibility(View.VISIBLE);
+                        } else {
+                            empty_heart.setVisibility(View.VISIBLE);
+                            filled_heart.setVisibility(View.GONE);
+                        }if (rate.equalsIgnoreCase("null")){
+                            ratingBar.setRating(0);
+                        }else {
+                            ratingBar.setRating(Integer.parseInt(rate));
+                        }
+
+                    } else {
+
+                        Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
                     }
-                    if (wish_flag.equalsIgnoreCase("1")){
-                        empty_heart.setVisibility(View.GONE);
-                        filled_heart.setVisibility(View.VISIBLE);
-                    }else {
-                        empty_heart.setVisibility(View.VISIBLE);
-                        filled_heart.setVisibility(View.GONE);
-                    }
-                   /* if (GetSet.getSubproductrating().equalsIgnoreCase("0")){
-                        btnrate.setEnabled(true);
-                        btnrate.setText("RATE NOW");
-                    }else {
-                        btnrate.setEnabled(false);
-                        btnrate.setText("RATED");
-                    }*/
-
-                }else {
-
-                    Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
                 }
-            } catch (JSONException e) {
+            }catch (JSONException e) {
                 e.printStackTrace();
             }
         }
@@ -401,15 +450,17 @@ public class SearchActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.ADD_CART;
-        String proid, cusid;
+        String proid, cusid, date;
         int flag;
         ProgressDialog progress;
 
-        public addtoCart(Context context, String proid, String cusid, int flag) {
+        public addtoCart(Context context, String proid, String cusid, int flag, String date) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
             this.flag = flag;
+            this.date = date;
+
         }
 
         @Override
@@ -433,6 +484,7 @@ public class SearchActivity extends AppCompatActivity {
                     .add(Constants.CUSTOMER_ID, cusid)
                     .add(Constants.PRODUCT_ID, proid)
                     .add(Constants.cartflag, String.valueOf(flag))
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -466,7 +518,7 @@ public class SearchActivity extends AppCompatActivity {
                 if (jonj.getString("status").equalsIgnoreCase(
                         "Inserted")) {
 
-                    new fetchCartCount(context, cusid).execute();
+                    new fetchCartCount(context, cusid, date).execute();
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
 
                 }else if (jonj.getString("status").equalsIgnoreCase(
@@ -475,7 +527,7 @@ public class SearchActivity extends AppCompatActivity {
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    new fetchCartCount(context, cusid).execute();
+                    new fetchCartCount(context, cusid, date).execute();
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
 
                 }
@@ -779,42 +831,60 @@ public class SearchActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
 
-                    String data = jonj.getString("data");
-                    JSONArray array = new JSONArray(data);
-                    for(int i=0;i<array.length();i++) {
-                        JSONObject jcat = array.getJSONObject(i);
-                        map = new HashMap<String, String>();
+                        String data = jonj.getString("data");
+                        JSONArray array = new JSONArray(data);
+                        for (int i = 0; i < array.length(); i++) {
+                            JSONObject jcat = array.getJSONObject(i);
+                            map = new HashMap<String, String>();
 
-                        name = jcat.getString("cus_name");
-                        review = jcat.getString("review");
-                        rate = jcat.getString("rating");
-                        time = jcat.getString("date");
+                            name = jcat.getString("cus_name");
+                            review = jcat.getString("review");
+                            rate = jcat.getString("rating");
+                            time = jcat.getString("date");
 
-                        map.put("cus_name", name);
-                        map.put("review", review);
-                        map.put("rating", rate);
-                        map.put("date", time);
+                            map.put("cus_name", name);
+                            map.put("review", review);
+                            map.put("rating", rate);
+                            map.put("date", time);
 
-                        reviewList.add(map);
+                            reviewList.add(map);
+                        }
+
+                        reviewAdapter = new ReviewAdapter(SearchActivity.this, reviewList);
+                        recyclerView.setAdapter(reviewAdapter);
+
+                        btnrate.setEnabled(false);
+                        btnrate.setText("RATED");
+
+                        recyclerView.setVisibility(View.VISIBLE);
+                        tvnoreview.setVisibility(View.GONE);
+
+                    } else {
+                        recyclerView.setVisibility(View.GONE);
+                        tvnoreview.setVisibility(View.VISIBLE);
+                        btnrate.setEnabled(true);
+                        btnrate.setText("RATE NOW");
                     }
-
-                    reviewAdapter = new ReviewAdapter(SearchActivity.this,reviewList);
-                    recyclerView.setAdapter(reviewAdapter);
-
                 }else {
-                    recyclerView.setVisibility(View.GONE);
-                    tvnoreview.setVisibility(View.VISIBLE);
-                    /* Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();*/
+                    Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
                 }
-            } catch (JSONException e) {
+            }catch (JSONException e) {
                 e.printStackTrace();
             }
 
         }
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
 
 }

@@ -13,6 +13,7 @@
                 android:src="@drawable/noimage"
                 android:id="@+id/discover_iv3"
                 app:civ_border_width="2dp"
+                app:civ_border_color="#10000000"
                 app:civ_border_overlay="false"
                 android:layout_width="100dp"
                 android:layout_centerHorizontal="true"

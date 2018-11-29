@@ -5,23 +5,241 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activity.ContactActivity">
-    <RelativeLayout
-        android:id="@+id/ivlogo"
+    <ScrollView
+        android:fillViewport="true"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-    <ImageView
-        android:scaleType="fitCenter"
-        android:src="@drawable/shadowwslogo"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-    </RelativeLayout>
-    <TextView
-        android:layout_marginBottom="5dp"
-        android:layout_alignParentBottom="true"
-        android:textStyle="bold"
-        android:typeface="serif"
-        android:gravity="center"
-        android:text="Shadowws.in"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:layout_margin="5dp"
+                    android:weightSum="3"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <LinearLayout
+                        android:gravity="center"
+                        android:weightSum="3"
+                        android:orientation="vertical"
+                        android:layout_weight="1"
+                        android:layout_marginTop="10dp"
+                        android:background="@color/colorPrimary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:layout_marginTop="15dp"
+                            android:src="@drawable/ic_location"
+                            android:layout_weight="1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:layout_marginTop="10dp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:layout_weight="1"
+                            android:textSize="18sp"
+                            android:text="MOBILE SHOP IN"
+                            android:textColor="#FFF"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:id="@+id/store1"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="15dp"
+                            android:gravity="center"
+                            android:layout_weight="1"
+                            android:textSize="16sp"
+                            android:text="2-A, Valluvar Colony, P&amp;T Nagar Road, Madurai-625017"
+                            android:textColor="#FFF"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:ellipsize="marquee"
+                            android:marqueeRepeatLimit="marquee_forever"
+                            android:scrollHorizontally="true"
+                            android:paddingLeft="5dip"
+                            android:paddingRight="5dip"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:freezesText="true" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:gravity="center"
+                        android:weightSum="3"
+                        android:orientation="vertical"
+                        android:layout_weight="1"
+                        android:layout_marginTop="10dp"
+                        android:background="@color/colorPrimary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:layout_marginTop="15dp"
+                            android:src="@drawable/ic_location"
+                            android:layout_weight="1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:layout_marginTop="10dp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:layout_weight="1"
+                            android:textSize="18sp"
+                            android:text="MENS ACCESSORIES &amp; SHOWROOM"
+                            android:textColor="#FFF"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:id="@+id/store2"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="15dp"
+                            android:gravity="center"
+                            android:layout_weight="1"
+                            android:textSize="16sp"
+                            android:text="2-A, Valluvar Colony, P&amp;T Nagar Road, Madurai-625017"
+                            android:textColor="#FFF"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:ellipsize="marquee"
+                            android:marqueeRepeatLimit="marquee_forever"
+                            android:scrollHorizontally="true"
+                            android:paddingLeft="5dip"
+                            android:paddingRight="5dip"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:freezesText="true" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:gravity="center"
+                        android:weightSum="3"
+                        android:orientation="vertical"
+                        android:layout_weight="1"
+                        android:layout_marginTop="10dp"
+                        android:background="@color/colorPrimary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:layout_marginTop="15dp"
+                            android:src="@drawable/ic_location"
+                            android:layout_weight="1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:layout_marginTop="10dp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:layout_weight="1"
+                            android:textSize="18sp"
+                            android:text="MOBILE SHOP, MENS, WOMENS &amp; KIDS ACCESSORIES"
+                            android:textColor="#FFF"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:id="@+id/store3"
+                            android:layout_marginTop="10dp"
+                            android:layout_marginBottom="15dp"
+                            android:gravity="center"
+                            android:layout_weight="1"
+                            android:textSize="16sp"
+                            android:text="No.425, Park Town, 1, P&amp;T Nagar Road, Madurai-625017"
+                            android:textColor="#FFF"
+                            android:layout_width="fill_parent"
+                            android:layout_height="wrap_content"
+                            android:singleLine="true"
+                            android:ellipsize="marquee"
+                            android:marqueeRepeatLimit="marquee_forever"
+                            android:scrollHorizontally="true"
+                            android:paddingLeft="5dip"
+                            android:paddingRight="5dip"
+                            android:focusable="true"
+                            android:focusableInTouchMode="true"
+                            android:freezesText="true" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_margin="10dp"
+                        android:weightSum="2"
+                        android:orientation="vertical"
+                        android:layout_marginTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_marginTop="10dp"
+                            android:layout_weight="1"
+                            android:textStyle="bold"
+                            android:textColor="#000"
+                            android:text="CONTACT :"
+                            android:textSize="18sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:layout_marginBottom="10dp"
+                            android:layout_weight="1"
+                            android:textStyle="normal"
+                            android:textColor="#000"
+                            android:text="99426 13334"
+                            android:textSize="16sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_margin="10dp"
+                        android:weightSum="2"
+                        android:orientation="vertical"
+                        android:layout_marginTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_marginTop="10dp"
+                            android:layout_weight="1"
+                            android:textStyle="bold"
+                            android:textColor="#000"
+                            android:text="SHOP TIME :"
+                            android:textSize="18sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:layout_marginBottom="10dp"
+                            android:layout_weight="1"
+                            android:textStyle="normal"
+                            android:textColor="#000"
+                            android:text="8:30 AM to 10:30 PM"
+                            android:textSize="16sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                    <LinearLayout
+                        android:layout_margin="10dp"
+                        android:weightSum="2"
+                        android:orientation="vertical"
+                        android:layout_marginTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:layout_marginTop="10dp"
+                            android:layout_weight="1"
+                            android:textStyle="bold"
+                            android:textColor="#000"
+                            android:text="DELIVERY TIME :"
+                            android:textSize="18sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                        <TextView
+                            android:layout_marginBottom="10dp"
+                            android:layout_weight="1"
+                            android:textStyle="normal"
+                            android:textColor="#000"
+                            android:text="10:00 AM to 10:00 PM"
+                            android:textSize="16sp"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </RelativeLayout>
+    </ScrollView>
 </RelativeLayout>

@@ -80,7 +80,6 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.MyViewHo
         /*float rate = Float.parseFloat(itemmap.get("product_rating"));*/
         holder.productName.setText(itemmap.get("product"));
         holder.productPrice.setText("₹\t" + itemmap.get("price"));
-        /*holder.ratingBar.setRating(rate);*/
 
         Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("image")).thumbnail(0.1f).into(holder.productImage);
 

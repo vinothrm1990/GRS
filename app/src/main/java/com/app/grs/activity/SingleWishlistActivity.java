@@ -26,6 +26,7 @@ import android.widget.Toast;
 import com.app.grs.R;
 import com.app.grs.adapter.ProductSliderAdapter;
 import com.app.grs.adapter.ReviewAdapter;
+import com.app.grs.fragment.HomeFragment;
 import com.app.grs.fragment.SubProductFragment;
 import com.app.grs.helper.Constants;
 import com.app.grs.helper.GRS;
@@ -47,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import me.relex.circleindicator.CircleIndicator;
+import me.zhanghai.android.materialratingbar.MaterialRatingBar;
 import okhttp3.Call;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
@@ -66,7 +68,6 @@ public class SingleWishlistActivity extends AppCompatActivity {
     String custid = "";
     private static int numofPage = 0;
     TextView textItemCount;
-    int numItemCount;
     private ArrayList<HashMap<String,String>> reviewList=new ArrayList<HashMap<String, String>>();
     RecyclerView.LayoutManager mLayoutManager;
     SimpleDateFormat sdf;
@@ -76,6 +77,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
     private CircleIndicator circleIndicator;
     private ProductSliderAdapter productSliderAdapter;
     private HashMap<String, String> data;
+    private MaterialRatingBar ratingBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,14 +86,15 @@ public class SingleWishlistActivity extends AppCompatActivity {
         proname = data.get("product");
         getSupportActionBar().setTitle(proname);
         setContentView(R.layout.activity_single_wishlist);
-
         Constants.pref = getSharedPreferences("GRS",Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
         custid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(this, custid).execute();
-        numItemCount = Constants.pref.getInt("count", 0);
-        setBadge();
+
+        new fetchCartCount(this, custid, timestamp).execute();
 
         proid = data.get("id");
         proprice = data.get("price");
@@ -103,7 +106,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
         tvproprice = findViewById(R.id.wishprice_tv);
         tvprodesc = findViewById(R.id.wishdesc_tv);
         btnrate = findViewById(R.id.wish_ratenow_btn);
-        tvtotalrating = findViewById(R.id.wish_overall_rating_tv);
+        ratingBar = findViewById(R.id.wish_overall_rating_tv);
         tvnoreview = findViewById(R.id.wish_tv_no_review);
         empty_heart = findViewById(R.id.wish_unchecked_fav_layout);
         filled_heart = findViewById(R.id.wish_checked_fav_layout);
@@ -118,7 +121,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
         slider = data.get("image1");
 
         new fetchReview(this, proid).execute();
-        new fetchFlag(this, proid, custid).execute();
+        new fetchFlag(this, proid, custid, timestamp).execute();
 
         viewPager = findViewById(R.id.wish_pager);
         circleIndicator = findViewById(R.id.wish_indicator);
@@ -142,7 +145,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                 int flag = 1;
                 new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp).execute();
                 Constants.cart="1";
-                new fetchCartCount(SingleWishlistActivity.this, custid).execute();
+                new fetchCartCount(SingleWishlistActivity.this, custid, timestamp).execute();
 
                 startActivity(new Intent(SingleWishlistActivity.this, MyCartActivity.class));
             }
@@ -189,6 +192,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                     new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
+                    new fetchCartCount(SingleWishlistActivity.this, custid, timestamp).execute();
 
                 }else if (Constants.cart.equals("1")){
 
@@ -196,6 +200,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                     new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
+                    new fetchCartCount(SingleWishlistActivity.this, custid, timestamp).execute();
 
                 }
             }
@@ -209,7 +214,6 @@ public class SingleWishlistActivity extends AppCompatActivity {
 
         MenuItem menuItem = menu.findItem(R.id.action_cart);
         View cart = MenuItemCompat.getActionView(menuItem);
-
         textItemCount = cart.findViewById(R.id.cart_badge);
         setBadge();
 
@@ -228,12 +232,12 @@ public class SingleWishlistActivity extends AppCompatActivity {
     private void setBadge() {
 
         if (textItemCount != null) {
-            if (numItemCount == 0) {
+            if (Constants.numItemCount == 0) {
                 if (textItemCount.getVisibility() != View.GONE) {
                     textItemCount.setVisibility(View.GONE);
                 }
             } else {
-                textItemCount.setText(String.valueOf(Math.min(numItemCount, 99)));
+                textItemCount.setText(String.valueOf(Math.min(Constants.numItemCount, 99)));
                 if (textItemCount.getVisibility() != View.VISIBLE) {
                     textItemCount.setVisibility(View.VISIBLE);
                 }
@@ -245,6 +249,12 @@ public class SingleWishlistActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // For Internet checking
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        custid = Constants.pref.getString("mobileno", "");
+        new fetchCartCount(this, custid, timestamp).execute();
+
         GRS.registerReceiver(SingleWishlistActivity.this);
     }
 
@@ -252,6 +262,12 @@ public class SingleWishlistActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         // For Internet disconnect checking
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+
+        custid = Constants.pref.getString("mobileno", "");
+        new fetchCartCount(this, custid, timestamp).execute();
         GRS.unregisterReceiver(SingleWishlistActivity.this);
     }
 
@@ -259,12 +275,13 @@ public class SingleWishlistActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String  cusid;
+        String  cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -286,6 +303,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -314,19 +332,34 @@ public class SingleWishlistActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                    numItemCount = Constants.pref.getInt("count", 0);
-                    setBadge();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")){
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                        //Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+
+                    }
+                }else {
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -406,16 +439,16 @@ public class SingleWishlistActivity extends AppCompatActivity {
                     if (jonj.getString("status").equalsIgnoreCase(
                             "Inserted")) {
 
-                        new fetchCartCount(context, cusid).execute();
+                        new fetchCartCount(context, cusid, date).execute();
+                        btncart.setText("REMOVE FROM CART");
                         Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
                         setBadge();
 
                     } else if (jonj.getString("status").equalsIgnoreCase(
                             "Already")) {
-                        btncart.setText("ADD TO CART");
                         Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
                     } else {
-                        new fetchCartCount(context, cusid).execute();
+                        new fetchCartCount(context, cusid, date).execute();
                         Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
                         setBadge();
                     }
@@ -747,9 +780,11 @@ public class SingleWishlistActivity extends AppCompatActivity {
                         reviewAdapter = new ReviewAdapter(SingleWishlistActivity.this, reviewList);
                         recyclerView.setAdapter(reviewAdapter);
 
-                        tvtotalrating.setText(rate);
                         btnrate.setEnabled(false);
                         btnrate.setText("RATED");
+
+                        recyclerView.setVisibility(View.VISIBLE);
+                        tvnoreview.setVisibility(View.GONE);
 
                     } else {
                         recyclerView.setVisibility(View.GONE);
@@ -771,14 +806,15 @@ public class SingleWishlistActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.SUBPRODUCT;
-        String proid, cusid;
+        String proid, cusid, date;
         ProgressDialog progress;
-        String wish_flag, cart_flag;
+        String wish_flag, cart_flag, rate;
 
-        public fetchFlag(Context context, String proid, String cusid) {
+        public fetchFlag(Context context, String proid, String cusid, String date) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -801,6 +837,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
             RequestBody body = new FormBody.Builder()
                     .add("product_id", proid)
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -837,7 +874,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                         String data = jonj.getString("data");
                         wish_flag = jonj.getString("wish_flag");
                         cart_flag = jonj.getString("cart_flag");
-
+                        rate = jonj.getString("rating");
                         if (cart_flag.equalsIgnoreCase("1")) {
                             btncart.setText("REMOVE FROM CART");
                         } else {
@@ -849,15 +886,19 @@ public class SingleWishlistActivity extends AppCompatActivity {
                         } else {
                             empty_heart.setVisibility(View.VISIBLE);
                             filled_heart.setVisibility(View.GONE);
+                        }if (rate.equalsIgnoreCase("null")){
+                            ratingBar.setRating(0);
+                        }else {
+                            ratingBar.setRating(Integer.parseInt(rate));
                         }
 
                     } else {
 
-                        Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
                     }
                 }else {
 
-                    Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
 
                 }
             }catch (JSONException e) {
@@ -866,4 +907,11 @@ public class SingleWishlistActivity extends AppCompatActivity {
 
         }
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
 }

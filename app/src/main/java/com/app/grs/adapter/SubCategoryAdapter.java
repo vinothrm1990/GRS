@@ -48,9 +48,9 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
 
         final HashMap<String,String> itemmap = subcategoryList.get(position);
 
-        holder.subcatName.setText(itemmap.get("sub_cat"));
+        holder.subcatName.setText(itemmap.get("sub_product"));
 
-        Glide.with(mContext).load(itemmap.get("subcat_img_url") + itemmap.get("subcat_img_name")).thumbnail(0.1f).into(holder.subcatImage);
+        Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("image")).thumbnail(0.1f).into(holder.subcatImage);
 
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
@@ -59,13 +59,13 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
 
 
                 Constants.subcategoryid = itemmap.get("id");
-                Constants.subcategoryname = itemmap.get("sub_cat");
+                Constants.subcategoryname = itemmap.get("sub_product");
 
                 AppCompatActivity activity = (AppCompatActivity) view.getContext();
                 Fragment myFragment = new ProductFragment();
                 activity.getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment).addToBackStack(null).commit();
 
-                Toast.makeText(mContext, "You have selected :\t" + itemmap.get("sub_cat"), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(mContext, "You have selected :\t" + itemmap.get("sub_cat"), Toast.LENGTH_SHORT).show();
 
             }
         });

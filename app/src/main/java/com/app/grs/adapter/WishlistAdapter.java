@@ -2,6 +2,7 @@ package com.app.grs.adapter;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.app.grs.R;
+import com.app.grs.activity.HomeActivity;
 import com.app.grs.activity.SingleWishlistActivity;
 import com.app.grs.helper.Constants;
 import com.bumptech.glide.Glide;
@@ -80,17 +82,31 @@ public class WishlistAdapter extends RecyclerView.Adapter<WishlistAdapter.MyView
             @Override
             public void onClick(View view) {
 
-                Constants.pref = mContext.getSharedPreferences("GRS",MODE_PRIVATE);
+                android.support.v7.app.AlertDialog.Builder alertDialog = new android.support.v7.app.AlertDialog.Builder(mContext);
+                alertDialog.setTitle("Alert!");
+                alertDialog.setMessage("Are you sure you want to remove from your Wishlist?");
+                alertDialog.setIcon(R.drawable.ic_delete_black_24dp);
+                alertDialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        Constants.pref = mContext.getSharedPreferences("GRS",MODE_PRIVATE);
 
-                String cusid = Constants.pref.getString("mobileno", "");
-                String proid = itemmap.get("id");
+                        String cusid = Constants.pref.getString("mobileno", "");
+                        String proid = itemmap.get("id");
 
-                wishlistList.remove(position);
-                notifyItemRemoved(position);
-                notifyDataSetChanged();
+                        wishlistList.remove(position);
+                        notifyItemRemoved(position);
+                        notifyDataSetChanged();
 
-                int flag = 0;
-                new deleteWishlist(mContext, cusid, proid, flag).execute();
+                        int flag = 0;
+                        new deleteWishlist(mContext, cusid, proid, flag).execute();
+                    }
+                });
+                alertDialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                    public void onClick(@NonNull DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                alertDialog.show();
 
             }
         });

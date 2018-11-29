@@ -24,13 +24,16 @@ import com.app.grs.adapter.AllFeaturedAdapter;
 import com.app.grs.adapter.FeaturedAdapter;
 import com.app.grs.adapter.WishlistAdapter;
 import com.app.grs.helper.Constants;
+import com.app.grs.helper.GRS;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import okhttp3.Call;
@@ -48,6 +51,8 @@ public class FeaturedAllActivity extends AppCompatActivity {
     RecyclerView.LayoutManager mLayoutManager;
     TextView textItemCount;
     int numItemCount;
+    SimpleDateFormat sdf;
+    Date now;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +63,12 @@ public class FeaturedAllActivity extends AppCompatActivity {
         Constants.pref = getSharedPreferences("GRS", Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+
         String cusid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(this, cusid).execute();
+        new fetchCartCount(this, cusid, timestamp).execute();
 
         numItemCount = Constants.pref.getInt("count", 0);
 
@@ -128,6 +137,7 @@ public class FeaturedAllActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -215,12 +225,13 @@ public class FeaturedAllActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String  cusid;
+        String  cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -242,6 +253,7 @@ public class FeaturedAllActivity extends AppCompatActivity {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -270,22 +282,48 @@ public class FeaturedAllActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
+                    int count = Integer.parseInt(jonj.getString("count"));
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed"))
+                        Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }else {
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
 
         }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // For Internet checking
+        GRS.registerReceiver(FeaturedAllActivity.this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // For Internet disconnect checking
+        GRS.unregisterReceiver(FeaturedAllActivity.this);
     }
 
 }

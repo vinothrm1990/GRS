@@ -14,9 +14,12 @@ import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.app.grs.R;
+import com.app.grs.adapter.CartAdapter;
+import com.app.grs.helper.GRS;
+
+import static com.app.grs.adapter.CartAdapter.cartList;
 
 public class PaymentActivity extends AppCompatActivity {
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,5 +38,25 @@ public class PaymentActivity extends AppCompatActivity {
 
 
 
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // For Internet checking
+        GRS.registerReceiver(PaymentActivity.this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // For Internet disconnect checking
+        GRS.unregisterReceiver(PaymentActivity.this);
     }
 }

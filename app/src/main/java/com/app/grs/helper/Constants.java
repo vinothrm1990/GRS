@@ -4,8 +4,9 @@ import android.content.SharedPreferences;
 
 public class Constants {
 
-    public static String BASE_URL = "http://grs.shadowws.in/jsons/";
-    public static String IMAGE_URL = "http://grs.shadowws.in/admin/uploads/";
+    public static String BASE_URL = "https://grsshopping.com/jsons/";
+    public static String IMAGE_URL = "https://grsshopping.com/admin/uploads/";
+    //public static String OTP_URL = "https://grsshopping.com/";
 
     public static String GET_DISCOVER1 = "get_discover1.php?";
     public static String GET_DISCOVER2 = "get_discover2.php?";
@@ -15,6 +16,7 @@ public class Constants {
     public static String UPLOAD_PROFILEPIC = "post_profilepic.php?";
     public static String VERIFY_OTP= "verify_otp.php?";
     public static String REGISTER_USER= "register_user.php?";
+    public static String CHECK_REGISTER_USER= "check_register.php?";
     public static String LOGIN_USER= "login_user.php?";
     public static String GET_OTP= "get_otp.php?";
     public static String FORGOT_PASSWORD= "forgot_password.php?";
@@ -57,6 +59,7 @@ public class Constants {
     public static String subcategoryname = "";
     public static String categoryname="";
     public static String cart="0";
+    public static int numItemCount;
 
     public static SharedPreferences pref;
     public static SharedPreferences.Editor editor;

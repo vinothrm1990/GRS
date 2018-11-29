@@ -89,6 +89,8 @@ public class FeaturedDetailsFragment extends Fragment {
     private static ViewPager viewPager;
     private static int numofPage = 0;
     private ProductSliderAdapter productSliderAdapter;
+    LinearLayout noImage, yesImage;
+    List<String> sliderlist = new ArrayList<>();
 
     public FeaturedDetailsFragment() {
         // Required empty public constructor
@@ -98,16 +100,6 @@ public class FeaturedDetailsFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-
-
-        Constants.pref = getActivity().getSharedPreferences("GRS",Context.MODE_PRIVATE);
-        Constants.editor = Constants.pref.edit();
-
-        custid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(getActivity(), custid).execute();
-
-        numItemCount = Constants.pref.getInt("count", 0);
-        setBadge();
     }
 
     @Override
@@ -121,17 +113,19 @@ public class FeaturedDetailsFragment extends Fragment {
 
         Constants.pref = getActivity().getSharedPreferences("GRS",Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
-        custid = Constants.pref.getString("mobileno", "");
 
-        new fetchCartCount(getActivity(), custid).execute();
-        numItemCount = Constants.pref.getInt("count", 0);
-        setBadge();
+        custid = Constants.pref.getString("mobileno", "");
 
         proid = getArguments().getString("proid");
         proimage = getArguments().getString("prosilde");
         prodesc = getArguments().getString("prodesc");
         proprice = getArguments().getString("proprice");
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+
+        new fetchCartCount(getActivity(), custid, timestamp).execute();
         new getFlag(getActivity(), proid,  custid).execute();
 
         btncart = view.findViewById(R.id.featured_btn_addtocart);
@@ -145,6 +139,8 @@ public class FeaturedDetailsFragment extends Fragment {
         empty_heart = view.findViewById(R.id.fea_unchecked_fav_layout);
         filled_heart = view.findViewById(R.id.fea_checked_fav_layout);
         ratingBar = view.findViewById(R.id.feature_product_rate);
+        noImage = view.findViewById(R.id.noimage_layout);
+        yesImage = view.findViewById(R.id.proimage_layout);
 
         tvfeaname.setText(proname);
         tvfeaprice.setText("₹\t" + proprice);
@@ -153,12 +149,20 @@ public class FeaturedDetailsFragment extends Fragment {
         viewPager = view.findViewById(R.id.featured_pager);
         circleIndicator = view.findViewById(R.id.featured_indicator);
 
-        List<String> sliderlist= Arrays.asList(proimage.split(","));
-        numofPage = sliderlist.size();
-        productSliderAdapter= new ProductSliderAdapter(getActivity(),sliderlist);
-        viewPager.setAdapter(productSliderAdapter);
-        viewPager.setOffscreenPageLimit(3);
-        circleIndicator.setViewPager(viewPager);
+        if (!proimage.isEmpty()){
+            yesImage.setVisibility(View.VISIBLE);
+            noImage.setVisibility(View.GONE);
+            sliderlist= Arrays.asList(proimage.split(","));
+            numofPage = sliderlist.size();
+            productSliderAdapter= new ProductSliderAdapter(getActivity(),sliderlist);
+            viewPager.setAdapter(productSliderAdapter);
+            viewPager.setOffscreenPageLimit(3);
+            circleIndicator.setViewPager(viewPager);
+        }else {
+            yesImage.setVisibility(View.GONE);
+            noImage.setVisibility(View.VISIBLE);
+        }
+
 
         new fetchReview(getActivity(), proid).execute();
 
@@ -176,10 +180,10 @@ public class FeaturedDetailsFragment extends Fragment {
                 String timestamp = sdf.format(now);
 
                 int flag = 1;
-                new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
                 Constants.cart="1";
-                new fetchCartCount(getActivity(), custid).execute();
+                new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
 
+                //new fetchCartCount(getActivity(), custid, timestamp).execute();
                 startActivity(new Intent(getActivity(), MyCartActivity.class));
 
             }
@@ -207,7 +211,7 @@ public class FeaturedDetailsFragment extends Fragment {
                     new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
-                    new fetchCartCount(getActivity(), custid).execute();
+                    new fetchCartCount(getActivity(), custid, timestamp).execute();
 
                 }else if (Constants.cart.equals("1")){
 
@@ -215,7 +219,7 @@ public class FeaturedDetailsFragment extends Fragment {
                     new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
-                    new fetchCartCount(getActivity(), custid).execute();
+                    new fetchCartCount(getActivity(), custid, timestamp).execute();
 
                 }
             }
@@ -247,8 +251,13 @@ public class FeaturedDetailsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // For Internet checking
 
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        String cusid = Constants.pref.getString("mobileno", "");
+        new fetchCartCount(getActivity(), cusid, timestamp).execute();
+        new getFlag(getActivity(), proid,  custid).execute();
         GRS.registerReceiver(getActivity());
     }
 
@@ -256,6 +265,11 @@ public class FeaturedDetailsFragment extends Fragment {
     public void onPause() {
         super.onPause();
         // For Internet disconnect checking
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String timestamp = sdf.format(now);
+        String cusid = Constants.pref.getString("mobileno", "");
+        new fetchCartCount(getActivity(), cusid, timestamp).execute();
         GRS.unregisterReceiver(getActivity());
     }
 
@@ -397,6 +411,7 @@ public class FeaturedDetailsFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Do something that differs the Activity's menu here
+        inflater.inflate(R.menu.home, menu);
         super.onCreateOptionsMenu(menu, inflater);
 
         MenuItem menuItem = menu.findItem(R.id.action_cart);
@@ -404,17 +419,26 @@ public class FeaturedDetailsFragment extends Fragment {
         textItemCount = cart.findViewById(R.id.cart_badge);
         setBadge();
 
+        cart.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent i = new Intent(getActivity(), MyCartActivity.class);
+                startActivity(i);
+            }
+
+        });
     }
 
     private void setBadge() {
 
         if (textItemCount != null) {
-            if (numItemCount == 0) {
+            if (Constants.numItemCount == 0) {
                 if (textItemCount.getVisibility() != View.GONE) {
                     textItemCount.setVisibility(View.GONE);
                 }
             } else {
-                textItemCount.setText(String.valueOf(Math.min(numItemCount, 99)));
+                textItemCount.setText(String.valueOf(Math.min(Constants.numItemCount, 99)));
                 if (textItemCount.getVisibility() != View.VISIBLE) {
                     textItemCount.setVisibility(View.VISIBLE);
                 }
@@ -493,16 +517,18 @@ public class FeaturedDetailsFragment extends Fragment {
                 if (jonj.getString("status").equalsIgnoreCase(
                         "Inserted")) {
 
-                    new fetchCartCount(context, cusid).execute();
+                    new fetchCartCount(context, cusid, date).execute();
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
 
                 }else if (jonj.getString("status").equalsIgnoreCase(
                         "Already"))
                 {
+                    btncart.setText("REMOVE FROM CART");
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    new fetchCartCount(context, cusid).execute();
+
+                    new fetchCartCount(context, cusid, date).execute();
                     Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
 
                 }
@@ -610,12 +636,13 @@ public class FeaturedDetailsFragment extends Fragment {
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String cusid;
+        String cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -637,6 +664,7 @@ public class FeaturedDetailsFragment extends Fragment {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -665,19 +693,35 @@ public class FeaturedDetailsFragment extends Fragment {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
 
-                    numItemCount = Constants.pref.getInt("count", 0);
-                    setBadge();
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")) {
+
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                        //Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -870,8 +914,10 @@ public class FeaturedDetailsFragment extends Fragment {
 
 
                         if (cart_flag.equalsIgnoreCase("1")) {
+                            Constants.cart="1";
                             btncart.setText("REMOVE FROM CART");
                         } else {
+                            Constants.cart="0";
                             btncart.setText("ADD TO CART");
                         }
                         if (wish_flag.equalsIgnoreCase("1")) {

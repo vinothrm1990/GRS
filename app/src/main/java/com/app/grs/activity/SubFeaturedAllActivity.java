@@ -90,8 +90,13 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
 
         Constants.pref = getSharedPreferences("GRS", Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
+
+        now = new Date();
+        sdf = new SimpleDateFormat("yyyy-MM-dd");
+        final String timestamp = sdf.format(now);
+
         custid = Constants.pref.getString("mobileno", "");
-        new fetchCartCount(this, custid).execute();
+        new fetchCartCount(this, custid, timestamp).execute();
         numItemCount = Constants.pref.getInt("count", 0);
         setBadge();
 
@@ -141,9 +146,9 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 int flag = 1;
-                new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag).execute();
+                new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp).execute();
                 Constants.cart="1";
-                new fetchCartCount(SubFeaturedAllActivity.this, custid).execute();
+                new fetchCartCount(SubFeaturedAllActivity.this, custid, timestamp).execute();
 
                 startActivity(new Intent(SubFeaturedAllActivity.this, MyCartActivity.class));
             }
@@ -162,18 +167,18 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
                 if (Constants.cart.equals("0")){
 
                     int flag = 1;
-                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag).execute();
+                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
-                    new fetchCartCount(SubFeaturedAllActivity.this, custid).execute();
+                    new fetchCartCount(SubFeaturedAllActivity.this, custid, timestamp).execute();
 
                 }else if (Constants.cart.equals("1")){
 
                     int flag = 0;
-                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag).execute();
+                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
-                    new fetchCartCount(SubFeaturedAllActivity.this, custid).execute();
+                    new fetchCartCount(SubFeaturedAllActivity.this, custid, timestamp).execute();
 
                 }
             }
@@ -237,6 +242,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -480,6 +486,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -552,12 +559,13 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.CART_COUNT;
-        String cusid;
+        String cusid, date;
         ProgressDialog progress;
 
-        public fetchCartCount(Context context, String cusid) {
+        public fetchCartCount(Context context, String cusid, String date) {
             this.context = context;
             this.cusid = cusid;
+            this.date = date;
         }
 
         @Override
@@ -579,6 +587,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             OkHttpClient client = new OkHttpClient();
             RequestBody body = new FormBody.Builder()
                     .add("customer_id", cusid)
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -607,19 +616,34 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                int count = Integer.parseInt(jonj.getString("count"));
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "success")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
 
-                    Constants.editor.putInt("count", count);
-                    Constants.editor.apply();
-                    Constants.editor.commit();
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "success")) {
 
-                    numItemCount = Constants.pref.getInt("count", 0);
-                    setBadge();
+                        int count = Integer.parseInt(jonj.getString("count"));
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
 
-                }else  Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                        numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")){
+                        int count = 0;
+                        Constants.editor.putInt("count", count);
+                        Constants.editor.apply();
+                        Constants.editor.commit();
+
+                        Constants.numItemCount = Constants.pref.getInt("count", 0);
+                        setBadge();
+                    }
+
+                }else {
+                    Toast.makeText(context, "Something went wrong", Toast.LENGTH_SHORT).show();
+                }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -779,15 +803,16 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
 
         Context context;
         String url = Constants.BASE_URL + Constants.ADD_CART;
-        String proid, cusid;
+        String proid, cusid, date;
         int flag;
         ProgressDialog progress;
 
-        public addtoCart(Context context, String proid, String cusid, int flag) {
+        public addtoCart(Context context, String proid, String cusid, int flag, String date) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
             this.flag = flag;
+            this.date = date;
         }
 
         @Override
@@ -798,6 +823,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -811,6 +837,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
                     .add(Constants.CUSTOMER_ID, cusid)
                     .add(Constants.PRODUCT_ID, proid)
                     .add(Constants.cartflag, String.valueOf(flag))
+                    .add("date", date)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -840,24 +867,24 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
-                jonj = new JSONObject(jsonData);
-                if (jonj.getString("status").equalsIgnoreCase(
-                        "Inserted")) {
+                if (jsonData != null) {
+                    jonj = new JSONObject(jsonData);
+                    if (jonj.getString("status").equalsIgnoreCase(
+                            "Inserted")) {
 
-                    new fetchCartCount(context, cusid).execute();
-                    Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                        new fetchCartCount(context, cusid, date).execute();
+                        Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
 
-                }else if (jonj.getString("status").equalsIgnoreCase(
-                        "Already"))
-                {
-                    Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "Already")) {
+                        Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
+                    } else {
+                        new fetchCartCount(context, cusid, date).execute();
+                        Toast.makeText(context, jonj.getString("message"), Toast.LENGTH_SHORT).show();
+
+                    }
                 }
-                else {
-                    new fetchCartCount(context, cusid).execute();
-                    Toast.makeText(context,jonj.getString("message"),Toast.LENGTH_SHORT).show();
-
-                }
-            } catch (JSONException e) {
+            }catch (JSONException e) {
                 e.printStackTrace();
             }
 
@@ -885,6 +912,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -970,4 +998,11 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
         }
 
     }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
 }

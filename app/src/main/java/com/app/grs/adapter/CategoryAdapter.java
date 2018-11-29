@@ -59,14 +59,15 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
 
                 Bundle bundle = new Bundle();
                 bundle.putString("catname", itemmap.get("cat"));
+                Constants.categoryname = itemmap.get("cat");
 
                AppCompatActivity activity = (AppCompatActivity) view.getContext();
                Fragment myFragment = new SubCategoryFragment();
+               myFragment.setArguments(bundle);
                activity.getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment).addToBackStack(null).commit();
                Log.d("Backstackcount", String.valueOf(activity.getFragmentManager().getBackStackEntryCount()));
 
-
-               Toast.makeText(mContext, "You have selected :\t" + itemmap.get("cat"), Toast.LENGTH_SHORT).show();
+               //Toast.makeText(mContext, "You have selected :\t" + itemmap.get("cat"), Toast.LENGTH_SHORT).show();
 
             }
         });

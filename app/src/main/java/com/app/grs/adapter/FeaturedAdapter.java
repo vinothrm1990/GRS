@@ -53,6 +53,7 @@ public class FeaturedAdapter extends RecyclerView.Adapter<FeaturedAdapter.MyView
         Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("image")).thumbnail(0.1f).into(holder.feaImage);
 
         holder.feaName.setText(itemmap.get("product"));
+        holder.feaName.setSelected(true);
         holder.feaprice.setText("₹\t" +itemmap.get("price"));
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
@@ -72,7 +73,7 @@ public class FeaturedAdapter extends RecyclerView.Adapter<FeaturedAdapter.MyView
                 myFragment.setArguments(bundle);
                 activity.getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment).addToBackStack(null).commit();
 
-                Toast.makeText(mContext, "You have selected :\t" + itemmap.get("product"), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(mContext, "You have selected :\t" + itemmap.get("product"), Toast.LENGTH_SHORT).show();
             }
         });
 

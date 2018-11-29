@@ -78,8 +78,10 @@
         <activity
             android:name=".activity.ContactActivity"
             android:parentActivityName=".activity.HomeActivity" />
-        <activity android:name=".activity.CheckoutActivity" />
-        <activity android:name=".activity.PaymentActivity"></activity>
+        <activity android:name=".activity.CheckoutActivity"
+            android:parentActivityName=".activity.MyCartActivity"/>
+        <activity android:name=".activity.PaymentActivity"
+            android:parentActivityName=".activity.CheckoutActivity"/>
     </application>
 
 </manifest>

@@ -1,6 +1,8 @@
 package com.app.grs.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -17,6 +19,7 @@ import android.widget.Toast;
 import com.app.grs.R;
 import com.app.grs.fragment.FeaturedDetailsFragment;
 import com.app.grs.fragment.SubCategoryFragment;
+import com.app.grs.helper.Constants;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
@@ -50,6 +53,7 @@ public class DiscoverAdapter1 extends RecyclerView.Adapter<DiscoverAdapter1.MyVi
         final HashMap<String,String> itemmap = discoverList1.get(position);
 
         Glide.with(mContext).load(itemmap.get("cat_img_url") + itemmap.get("cat_img_name")).thumbnail(0.1f).into(holder.image);
+
         holder.name.setText(itemmap.get("cat"));
 
         holder.image.setOnClickListener(new View.OnClickListener() {
@@ -64,7 +68,7 @@ public class DiscoverAdapter1 extends RecyclerView.Adapter<DiscoverAdapter1.MyVi
                 myFragment.setArguments(bundle);
                 activity.getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, myFragment).addToBackStack(null).commit();
 
-                Toast.makeText(mContext, "You have selected :\t" + itemmap.get("cat"), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(mContext, "You have selected :\t" + itemmap.get("cat"), Toast.LENGTH_SHORT).show();
             }
         });
     }

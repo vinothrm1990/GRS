@@ -18,9 +18,9 @@ import android.widget.Toast;
 import com.app.grs.R;
 import com.app.grs.adapter.CartAdapter;
 import com.app.grs.helper.Constants;
+import com.app.grs.helper.GRS;
 import com.libizo.CustomEditText;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -41,6 +41,8 @@ public class CheckoutActivity extends AppCompatActivity {
     CustomEditText dname, dphone, demail, dstate, dcity, dpostcode, daddress, bname, bemail, bphone, bstate, bcity, bpostcode, baddress;
     Button btnOrder;
     private Dialog dialog;
+    String subtotal;
+    CartAdapter cartAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +87,7 @@ public class CheckoutActivity extends AppCompatActivity {
         String b_post = bundle.getString("post_code");
         String b_add = bundle.getString("address1");
         final String cart_id = bundle.getString("cartid");
+        subtotal = bundle.getString("subtotal");
 
         bname.setText(b_name);
         bphone.setText(b_phone);
@@ -131,6 +134,8 @@ public class CheckoutActivity extends AppCompatActivity {
 
     }
 
+
+
     private class shipDetails extends AsyncTask<String, Integer, String> {
 
         private Context context;
@@ -166,6 +171,7 @@ public class CheckoutActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 
@@ -193,6 +199,8 @@ public class CheckoutActivity extends AppCompatActivity {
                     .add("bcity", bcity)
                     .add("bpost", bpost)
                     .add("badd", badd)
+                    .add("payment_mode", "Cash")
+                    .add("sum_price", subtotal)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -259,13 +267,37 @@ public class CheckoutActivity extends AppCompatActivity {
                             }
                         });
 
-                    } else {
+                    }else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed ")){
                         Toast.makeText(getApplicationContext(), jonj.getString("message"), Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+                        Toast.makeText(getApplicationContext(), "Something went Wrong", Toast.LENGTH_SHORT).show();
                     }
                 }
             }catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        GRS.freeMemory();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // For Internet checking
+        GRS.registerReceiver(CheckoutActivity.this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // For Internet disconnect checking
+        GRS.unregisterReceiver(CheckoutActivity.this);
     }
 }

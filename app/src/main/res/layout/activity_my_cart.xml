@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#10000000"
+   android:background="#FFF"
     tools:context=".activity.MyCartActivity">
     <ScrollView
         android:id="@+id/scroll_layout"
@@ -12,6 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <RelativeLayout
+            android:background="#10000000"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <LinearLayout
@@ -82,4 +83,26 @@
             android:layout_width="match_parent"
             android:layout_height="50dp" />
     </LinearLayout>
+    <ImageView
+        android:src="@drawable/empty"
+        android:id="@+id/no_cart"
+        android:textSize="25sp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/no_data"
+        android:layout_below="@+id/no_cart"
+        android:textSize="25sp"
+        android:gravity="center"
+        android:textStyle="bold"
+        android:fontFamily="serif"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:text="Your Cart is Empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </RelativeLayout>
