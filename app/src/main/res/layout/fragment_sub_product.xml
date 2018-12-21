@@ -33,7 +33,7 @@
                     <android.support.v4.view.ViewPager
                         android:id="@+id/slide_pager"
                         android:layout_width="match_parent"
-                        android:layout_height="250dp">
+                        android:layout_height="230dp">
                     </android.support.v4.view.ViewPager>
                     <me.relex.circleindicator.CircleIndicator
                         android:id="@+id/slide_indicator"
@@ -44,6 +44,22 @@
                         android:layout_alignParentBottom="true"
                         android:gravity="bottom"
                         android:padding="10dip" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_marginTop="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginRight="10dp"
+                    android:background="#FFFFFF"
+                    android:visibility="gone"
+                    android:layout_alignParentTop="true"
+                    android:id="@+id/noimage_layout"
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <ImageView
+                        android:src="@drawable/no_image"
+                        android:layout_width="match_parent"
+                        android:layout_height="250dp" />
                 </LinearLayout>
                 <LinearLayout
                     android:id="@+id/proname_layout"
@@ -124,6 +140,20 @@
                                         android:layout_height="45dp" />
                                 </LinearLayout>
                             </LinearLayout>
+                        <LinearLayout
+                            android:orientation="horizontal"
+                            android:layout_weight="1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                            <TextView
+                                android:id="@+id/subproductcprice_tv"
+                                android:paddingLeft="5dp"
+                                android:text="Price"
+                                android:layout_marginBottom="5dp"
+                                android:textColor="@android:color/holo_red_light"
+                                android:textSize="16sp"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content" />
                             <TextView
                                 android:layout_weight="1"
                                 android:id="@+id/subproductprice_tv"
@@ -135,6 +165,7 @@
                                 android:textSize="20sp"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content" />
+                        </LinearLayout>
                         </LinearLayout>
                     </android.support.v7.widget.CardView>
                 </LinearLayout>
@@ -155,29 +186,160 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <LinearLayout
-                        android:layout_marginTop="5dp"
                         android:orientation="vertical"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
-                        <TextView
-                            android:paddingLeft="10dp"
+                        <LinearLayout
+                            android:weightSum="2"
                             android:layout_marginTop="5dp"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:text="About this Item :"
+                            android:orientation="horizontal"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content" />
-                        <com.uncopt.android.widget.text.justify.JustifiedTextView
-                            android:padding="5dp"
-                            android:id="@+id/subproductdesc_tv"
+                            android:layout_height="wrap_content">
+                            <TextView
+                                android:layout_weight="1"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:text="Availability :"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                            <TextView
+                                android:id="@+id/subpro_tv_stockin"
+                                android:visibility="visible"
+                                android:layout_weight="1"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginLeft="20dp"
+                                android:layout_marginRight="20dp"
+                                android:textSize="16sp"
+                                android:background="#00cc00"
+                                android:gravity="center"
+                                android:text="In Stock"
+                                android:textStyle="bold"
+                                android:textColor="#FFF"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                            <TextView
+                                android:id="@+id/subpro_tv_stockout"
+                                android:visibility="gone"
+                                android:layout_weight="1"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginLeft="20dp"
+                                android:layout_marginRight="20dp"
+                                android:textSize="16sp"
+                                android:background="@android:color/holo_red_light"
+                                android:gravity="center"
+                                android:text="Out of Stock"
+                                android:textStyle="bold"
+                                android:textColor="#FFF"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:weightSum="2"
                             android:layout_marginTop="5dp"
-                            android:layout_marginRight="5dp"
-                            android:layout_marginLeft="5dp"
-                            android:layout_marginBottom="5dp"
-                            android:textSize="16sp"
-                            android:inputType="textMultiLine"
+                            android:orientation="horizontal"
                             android:layout_width="match_parent"
-                            android:layout_height="wrap_content" />
+                            android:layout_height="wrap_content">
+                            <TextView
+                                android:layout_weight="1.5"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:text="Dealer ID :"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                            <TextView
+                                android:layout_weight="0.5"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="normal"
+                                android:text=""
+                                android:id="@+id/subproductdealer_tv"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:weightSum="2"
+                            android:layout_marginTop="5dp"
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                            <TextView
+                                android:layout_weight="1.5"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:text="Size :"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                            <TextView
+                                android:layout_weight="0.5"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="normal"
+                                android:text=""
+                                android:id="@+id/subproductsize_tv"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:weightSum="2"
+                            android:layout_marginTop="5dp"
+                            android:orientation="horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                            <TextView
+                                android:layout_weight="1.5"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:text="Color :"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                            <TextView
+                                android:layout_weight="0.5"
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="normal"
+                                android:text=""
+                                android:id="@+id/subproductcolor_tv"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
+                        <LinearLayout
+                            android:layout_marginTop="5dp"
+                            android:orientation="vertical"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content">
+                            <TextView
+                                android:paddingLeft="10dp"
+                                android:layout_marginTop="5dp"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:text="About this Item :"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                            <com.uncopt.android.widget.text.justify.JustifiedTextView
+                                android:padding="5dp"
+                                android:id="@+id/subproductdesc_tv"
+                                android:layout_marginTop="5dp"
+                                android:layout_marginRight="5dp"
+                                android:layout_marginLeft="5dp"
+                                android:layout_marginBottom="5dp"
+                                android:textSize="16sp"
+                                android:inputType="textMultiLine"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content" />
+                        </LinearLayout>
                     </LinearLayout>
                 </android.support.v7.widget.CardView>
                 </LinearLayout>
@@ -297,6 +459,7 @@
             </RelativeLayout>
         </ScrollView>
         <LinearLayout
+            android:id="@+id/button_layout"
             android:background="#10000000"
             android:layout_alignParentBottom="true"
             android:orientation="horizontal"

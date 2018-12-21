@@ -198,13 +198,14 @@ public class RegisterActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String jsonData) {
             super.onPostExecute(jsonData);
+            progress.dismiss();
             Log.v("result", "" + jsonData);
             JSONObject jonj = null;
             try {
                 jonj = new JSONObject(jsonData);
                 if (jonj.getString("status").equalsIgnoreCase(
                         "success")) {
-                    progress.dismiss();
+
                     scrollLayout.setVisibility(View.GONE);
                     otpLayout.setVisibility(View.GONE);
                     new Register_Asyc(context).execute();
@@ -227,7 +228,7 @@ public class RegisterActivity extends AppCompatActivity {
         private Context context;
         private String mobileno;
         private String url = Constants.BASE_URL + Constants.GET_OTP;
-        ProgressDialog progress;
+       /* ProgressDialog progress;*/
 
         public GetOTP(Context ctx, String mobileno) {
 
@@ -238,12 +239,12 @@ public class RegisterActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progress = new ProgressDialog(context);
+            /*progress = new ProgressDialog(context);
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progress.setCancelable(false);
-            progress.show();
+            progress.show();*/
         }
 
         @Nullable
@@ -278,8 +279,7 @@ public class RegisterActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String jsonData) {
             super.onPostExecute(jsonData);
-            progress.dismiss();
-
+           /* progress.dismiss();*/
             etgetotp.setVisibility(View.GONE);
             btngetotp.setVisibility(View.GONE);
             etconfirmotp.setVisibility(View.VISIBLE);
@@ -358,8 +358,11 @@ public class RegisterActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish();
 
-                }else
-                {
+                }else if (jonj.getString("status").equalsIgnoreCase(
+                        "failed")){
+                    Intent intent=new Intent(context,MyAccountActivity.class);
+                    startActivity(intent);
+                    finish();
                     Toast.makeText(getApplicationContext(),jonj.getString("message"),Toast.LENGTH_SHORT).show();
                 }
             } catch (JSONException e) {
@@ -388,6 +391,7 @@ public class RegisterActivity extends AppCompatActivity {
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
         }
 

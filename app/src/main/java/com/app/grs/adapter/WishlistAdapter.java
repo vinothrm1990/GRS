@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.CardView;
@@ -22,6 +23,8 @@ import com.app.grs.activity.HomeActivity;
 import com.app.grs.activity.SingleWishlistActivity;
 import com.app.grs.helper.Constants;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -65,9 +68,15 @@ public class WishlistAdapter extends RecyclerView.Adapter<WishlistAdapter.MyView
         final HashMap<String,String> itemmap = wishlistList.get(position);
 
         holder.productName.setText(itemmap.get("product"));
-        holder.productPrice.setText( "₹.\t" +itemmap.get("price"));
+        holder.productPrice.setText( "₹" +itemmap.get("price"));
+        holder.pcprice.setText( "₹" +itemmap.get("cross_price"));
+        holder.pcprice.setPaintFlags(holder.pcprice.getPaintFlags()|Paint.STRIKE_THRU_TEXT_FLAG);
 
-        Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("image")).thumbnail(0.1f).into(holder.productImage);
+
+        Glide.with(mContext)
+                .load(Constants.IMAGE_URL + itemmap.get("image"))
+                .apply(RequestOptions.centerInsideTransform())
+                .into(holder.productImage);
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,6 +87,17 @@ public class WishlistAdapter extends RecyclerView.Adapter<WishlistAdapter.MyView
                 mContext.startActivity(intent);
             }
         });
+
+        /*holder.wishLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent intent = new Intent(mContext, SingleWishlistActivity.class);
+                intent.putExtra("data", itemmap);
+                mContext.startActivity(intent);
+            }
+        });*/
+
         holder.deleteLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -119,19 +139,21 @@ public class WishlistAdapter extends RecyclerView.Adapter<WishlistAdapter.MyView
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView productName, productPrice;
+        public TextView productName, productPrice, pcprice;
         public ImageView productImage;
         public CardView cardView;
-        public LinearLayout deleteLayout;
+        public LinearLayout deleteLayout, wishLayout;
 
         public MyViewHolder(View itemView) {
             super(itemView);
 
             productName = itemView.findViewById(R.id.wish_productname_tv);
             productPrice = itemView.findViewById(R.id.wish_productprice_tv);
+            pcprice = itemView.findViewById(R.id.wish_productcprice_tv);
             productImage = itemView.findViewById(R.id.wish_productimage_iv);
             cardView = itemView.findViewById(R.id.cv_wishlist);
             deleteLayout = itemView.findViewById(R.id.delete_layout);
+            wishLayout = itemView.findViewById(R.id.wish_layout);
         }
     }
 

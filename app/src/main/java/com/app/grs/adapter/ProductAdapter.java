@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorSpace;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -34,6 +35,8 @@ import com.app.grs.fragment.SubProductFragment;
 import com.app.grs.helper.Constants;
 import com.app.grs.helper.GetSet;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -79,9 +82,14 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.MyViewHo
 
         /*float rate = Float.parseFloat(itemmap.get("product_rating"));*/
         holder.productName.setText(itemmap.get("product"));
-        holder.productPrice.setText("₹\t" + itemmap.get("price"));
+        holder.productPrice.setText("₹" + itemmap.get("price"));
+        holder.pcprice.setText("₹" + itemmap.get("cross_price"));
+        holder.pcprice.setPaintFlags(holder.pcprice.getPaintFlags()|Paint.STRIKE_THRU_TEXT_FLAG);
 
-        Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("image")).thumbnail(0.1f).into(holder.productImage);
+        Glide.with(mContext)
+                .load(Constants.IMAGE_URL + itemmap.get("image"))
+                .apply(RequestOptions.centerInsideTransform())
+                .into(holder.productImage);
 
         Constants.pref = mContext.getSharedPreferences("GRS", MODE_PRIVATE);
         Constants.productid = itemmap.get("id");
@@ -109,7 +117,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.MyViewHo
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        public TextView productName, productPrice;
+        public TextView productName, productPrice, pcprice;
         public ImageView productImage;
         public CardView cardView;
         public RatingBar ratingBar;
@@ -119,6 +127,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.MyViewHo
 
             productName = itemView.findViewById(R.id.productname_tv);
             productPrice = itemView.findViewById(R.id.productprice_tv);
+            pcprice = itemView.findViewById(R.id.productcprice_tv);
             productImage = itemView.findViewById(R.id.productimage_iv);
             cardView = itemView.findViewById(R.id.cv_product);
            /* ratingBar = itemView.findViewById(R.id.product_rate);*/

@@ -392,7 +392,7 @@ public class HomeFragment extends Fragment {
                         adapter = new SliderAdapter(getActivity(), bannerList);
                         viewPager.setAdapter(adapter);
                         indicator.setViewPager(viewPager);
-                        indicator.setAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.zoom_out));
+                       // indicator.setAnimation(AnimationUtils.loadAnimation(getActivity(), R.anim.zoom_out));
 
                     } else
                         Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
@@ -412,7 +412,7 @@ public class HomeFragment extends Fragment {
         String url = Constants.BASE_URL + Constants.GET_FEATURED;
         ProgressDialog progress;
         HashMap<String,String> map;
-        String feaid, feaname, feaimage, feaprice, feadesc, feaslide;
+        String feaid, feaname, feaimage, bid, bmobile, feaprice, feacprice, feadesc, feaslide, feasize , feacolor, feaqty;
 
         public fetchFeatured(Context context) {
             this.context = context;
@@ -476,8 +476,14 @@ public class HomeFragment extends Fragment {
                             feaname = jcat.getString("product");
                             feaimage = jcat.getString("image");
                             feaprice = jcat.getString("price");
+                            feacprice = jcat.getString("cross_price");
                             feadesc = jcat.getString("pro_desc");
                             feaslide = jcat.getString("image1");
+                            feasize = jcat.getString("size");
+                            feacolor = jcat.getString("color");
+                            feaqty = jcat.getString("qty");
+                            bid = jcat.getString("b_id");
+                            bmobile = jcat.getString("b_mobile");
 
                             map.put("id", feaid);
                             map.put("product", feaname);
@@ -485,6 +491,12 @@ public class HomeFragment extends Fragment {
                             map.put("price", feaprice);
                             map.put("pro_desc", feadesc);
                             map.put("image1", feaslide);
+                            map.put("cross_price", feacprice);
+                            map.put("size", feasize);
+                            map.put("color", feacolor);
+                            map.put("qty", feaqty);
+                            map.put("b_id", bid);
+                            map.put("b_mobile", bmobile);
 
                             featuredList.add(map);
                         }

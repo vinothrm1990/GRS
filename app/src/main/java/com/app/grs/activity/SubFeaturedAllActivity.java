@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -26,6 +27,7 @@ import android.widget.Toast;
 import com.app.grs.R;
 import com.app.grs.adapter.ProductSliderAdapter;
 import com.app.grs.adapter.ReviewAdapter;
+import com.app.grs.data.Slider;
 import com.app.grs.fragment.FeaturedDetailsFragment;
 import com.app.grs.fragment.SubProductFragment;
 import com.app.grs.helper.Constants;
@@ -71,21 +73,33 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
     private MaterialRatingBar ratingBar;
     HashMap<String, String> data;
     RecyclerView.LayoutManager mLayoutManager;
-    private TextView tvfeaname, tvfeaprice, tvfeadesc, tvfearate, tvtotalrating, tvnoreview;
+    private TextView tvfeaname, tvfeaprice, tvfeadesc, tvDealer, tvfearate, tvtotalrating, tvnoreview, tvfeacprice, tvStockIn, tvStockOut;
     private Button btnrate, btncart, btnbuy;
-    String proname = "",proid = "",rate;
+    String proname = "",proid = "",rate, did="", dmobile="";
     String custid = "";
-    TextView textItemCount;
+    TextView textItemCount, tvSize, tvColor;
     int numItemCount;
     AlertDialog alertDialog;
     SimpleDateFormat sdf;
+    LinearLayout noImage, yesImage, button_layout;
+    String proprice, prodesc, prosize, procolor, procprice, proqty;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         data =  (HashMap<String, String>) getIntent().getExtras().get("data");
-        proname = data.get("product");
-        getSupportActionBar().setTitle(proname);
+
+        if(data != null)
+        {
+            proid = data.get("id");
+            proname = data.get("product");
+            getSupportActionBar().setTitle(proname);
+        }else {
+            getSupportActionBar().setTitle("Featured Product");
+        }
+
+
         setContentView(R.layout.activity_sub_featured_all);
 
         Constants.pref = getSharedPreferences("GRS", Context.MODE_PRIVATE);
@@ -100,7 +114,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
         numItemCount = Constants.pref.getInt("count", 0);
         setBadge();
 
-        proid = data.get("id");
+
         new getFlag(this, proid,  custid).execute();
 
         tvfeaname = findViewById(R.id.subfea_name_tv);
@@ -113,25 +127,73 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
         empty_heart = findViewById(R.id.fea_det_unchecked_fav_layout);
         filled_heart = findViewById(R.id.fea_det_checked_fav_layout);
         ratingBar = findViewById(R.id.fea_product_rate);
+        noImage = findViewById(R.id.noimage_layout);
+        yesImage = findViewById(R.id.proimage_layout);
+        tvSize = findViewById(R.id.subfea_size_tv);
+        tvColor = findViewById(R.id.subfea_color_tv);
+        tvfeacprice = findViewById(R.id.subfea_cprice_tv);
+        tvStockIn = findViewById(R.id.subfea_tv_stockin);
+        tvStockOut = findViewById(R.id.subfea_tv_stockout);
+        button_layout = findViewById(R.id.button_layout);
+        tvDealer = findViewById(R.id.subfea_dealer_tv);
 
-        String proprice = data.get("price");
-        String prodesc = data.get("pro_desc");
 
-        tvfeaname.setText(proname);
-        tvfeaprice.setText("₹\t" + proprice);
-        tvfeadesc.setText(prodesc);
+        if(data != null){
+            proprice = data.get("price");
+            prodesc = data.get("pro_desc");
+            procprice = data.get("cross_price");
+            procolor = data.get("color");
+            prosize = data.get("size");
+            slider = data.get("image1");
+            proqty = data.get("qty");
+            did = data.get("b_id");
+            dmobile = data.get("b_mobile");
+
+
+            tvfeaname.setText(proname);
+            tvfeaprice.setText("₹"+proprice);
+            tvfeacprice.setText("₹"+procprice);
+            tvfeacprice.setPaintFlags(tvfeacprice.getPaintFlags()|Paint.STRIKE_THRU_TEXT_FLAG);
+            tvfeadesc.setText(prodesc);
+            tvColor.setText(procolor);
+            tvSize.setText(prosize);
+            tvDealer.setText(did);
+
+            if (prosize.isEmpty()){
+                tvSize.setVisibility(View.GONE);
+            }else {
+                tvSize.setVisibility(View.VISIBLE);
+            }
+
+            if (!proqty.equals("0") && !proqty.isEmpty()){
+                tvStockIn.setVisibility(View.VISIBLE);
+                tvStockOut.setVisibility(View.GONE);
+                button_layout.setVisibility(View.VISIBLE);
+            }else {
+                tvStockIn.setVisibility(View.GONE);
+                tvStockOut.setVisibility(View.VISIBLE);
+                button_layout.setVisibility(View.GONE);
+            }
+        }
 
         viewPager = findViewById(R.id.subfea_pager);
         circleIndicator = findViewById(R.id.subfea_indicator);
 
-        slider = data.get("image1");
-
-        List<String> sliderlist= Arrays.asList(slider.split(","));
-        numofPage = sliderlist.size();
-        productSliderAdapter= new ProductSliderAdapter(SubFeaturedAllActivity.this,sliderlist);
-        viewPager.setAdapter(productSliderAdapter);
-        viewPager.setOffscreenPageLimit(3);
-        circleIndicator.setViewPager(viewPager);
+        if (!slider.isEmpty()){
+            yesImage.setVisibility(View.VISIBLE);
+            noImage.setVisibility(View.GONE);
+            String [] list = slider.split(",");
+            List<String> sepList = Arrays.asList(list);
+            ArrayList<String> proList = new ArrayList<String>(sepList);
+            numofPage = proList.size();
+            productSliderAdapter= new ProductSliderAdapter(this,proList);
+            viewPager.setAdapter(productSliderAdapter);
+            viewPager.setOffscreenPageLimit(numofPage);
+            circleIndicator.setViewPager(viewPager);
+        }else {
+            yesImage.setVisibility(View.GONE);
+            noImage.setVisibility(View.VISIBLE);
+        }
 
         reviewList = new ArrayList<HashMap<String, String>>();
 
@@ -146,7 +208,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 int flag = 1;
-                new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp).execute();
+                new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp, did, dmobile).execute();
                 Constants.cart="1";
                 new fetchCartCount(SubFeaturedAllActivity.this, custid, timestamp).execute();
 
@@ -167,7 +229,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
                 if (Constants.cart.equals("0")){
 
                     int flag = 1;
-                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp).execute();
+                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp, did, dmobile).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
                     new fetchCartCount(SubFeaturedAllActivity.this, custid, timestamp).execute();
@@ -175,7 +237,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
                 }else if (Constants.cart.equals("1")){
 
                     int flag = 0;
-                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp).execute();
+                    new addtoCart(SubFeaturedAllActivity.this, proid, custid, flag, timestamp, did, dmobile).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
                     new fetchCartCount(SubFeaturedAllActivity.this, custid, timestamp).execute();
@@ -807,7 +869,7 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
         int flag;
         ProgressDialog progress;
 
-        public addtoCart(Context context, String proid, String cusid, int flag, String date) {
+        public addtoCart(Context context, String proid, String cusid, int flag, String date, String did, String dmobile) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
@@ -838,6 +900,8 @@ public class SubFeaturedAllActivity extends AppCompatActivity {
                     .add(Constants.PRODUCT_ID, proid)
                     .add(Constants.cartflag, String.valueOf(flag))
                     .add("date", date)
+                    .add("did", did)
+                    .add("dmobile", dmobile)
                     .build();
             Request request = new Request.Builder()
                     .url(url)

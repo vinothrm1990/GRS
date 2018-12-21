@@ -43,6 +43,8 @@ public class Constants {
     public static String CHECKOUT_DETAILS= "checkout_details.php?";
     public static String ORDER_DETAILS= "order_history.php?";
     public static String ADD_QUANTITY= "add_quantity.php?";
+    public static String GET_BRANCH= "get_branch.php?";
+    public static String ORDER_CONFIRM= "order_confirmed.php?";
 
     public static String mobileno="mobileno";
     public static String password="password";

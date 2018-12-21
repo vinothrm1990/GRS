@@ -167,8 +167,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:ems="10"
-                android:enabled="false"
-                android:text="1234"
                 android:hint="Enter OTP"
                 app:libIZO_clearIconTint="#808080"
                 app:libIZO_setBorderColor="@color/colorPrimary"

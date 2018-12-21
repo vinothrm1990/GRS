@@ -21,6 +21,9 @@ import com.app.grs.activity.MyCartActivity;
 import com.app.grs.helper.Constants;
 import com.app.grs.helper.OnDataChangeListener;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.IOException;
@@ -70,9 +73,12 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.MyViewHolder> 
         final HashMap<String,String> itemmap = cartList.get(position);
 
         holder.productName.setText(itemmap.get("product"));
-        holder.productPrice.setText( "₹\t" +itemmap.get("price"));
+        holder.productPrice.setText( "₹" +itemmap.get("price"));
 
-        Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("image")).thumbnail(0.1f).into(holder.productImage);
+        Glide.with(mContext)
+                .load(Constants.IMAGE_URL + itemmap.get("image"))
+                .apply(RequestOptions.centerInsideTransform())
+                .into(holder.productImage);
 
         holder.deleteLayout.setOnClickListener(new View.OnClickListener() {
             @Override

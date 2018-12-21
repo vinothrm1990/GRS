@@ -171,7 +171,7 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
 
         public Context context;
         String date;
-        public String cusid, proid, proname, proimage, proprice, prodesc, flag;
+        public String cusid, proid, proname, proimage, proprice, prodesc, flag, did, dmobile;
         public String url = Constants.BASE_URL + Constants.GET_CART;
         ProgressDialog progress;
         HashMap<String,String> map;
@@ -250,6 +250,8 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
                             proprice = jcat.getString("price");
                             prodesc = jcat.getString("pro_desc");
                             flag = jcat.getString("flag");
+                            did = jcat.getString("b_id");
+                            dmobile = jcat.getString("b_mobile");
 
                             map.put("cart_id", cartid);
                             map.put("id", proid);
@@ -260,6 +262,8 @@ public class MyCartActivity extends AppCompatActivity implements OnDataChangeLis
                             map.put("flag", flag);
                             map.put("qty", "1");
                             map.put("totalprice", proprice);
+                            map.put("b_id", proprice);
+                            map.put("b_mobile", proprice);
 
                             cartList.add(map);
 

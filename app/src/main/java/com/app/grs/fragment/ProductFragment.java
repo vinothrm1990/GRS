@@ -41,8 +41,10 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
@@ -62,7 +64,7 @@ public class  ProductFragment extends Fragment {
     RecyclerView.LayoutManager mLayoutManager;
     String subcatname = Constants.subcategoryname;
     TextView textItemCount;
-    ImageView error;
+    ImageView error, empty;
     SimpleDateFormat sdf;
     Date now;
 
@@ -99,6 +101,7 @@ public class  ProductFragment extends Fragment {
         new fetchProduct(getActivity(), subcatname).execute();
 
         error = view.findViewById(R.id.error);
+        empty = view.findViewById(R.id.empty);
         recyclerView = view.findViewById(R.id.rv_product);
         mLayoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(mLayoutManager);
@@ -266,7 +269,7 @@ public class  ProductFragment extends Fragment {
         String subcatname;
         ProgressDialog progress;
         HashMap<String,String> map;
-        String proid, proimg,proimgslider, proname, proprice, prodesc, rating;
+        String proid, proimg,proimgslider, proname, proprice, prodesc, bid, bmobile, rating, procprice, prosize, procolor, proqty;
 
         public fetchProduct(Context context, String subcatname) {
             this.context = context;
@@ -338,6 +341,12 @@ public class  ProductFragment extends Fragment {
                             proname = jcat.getString("product");
                             proprice = jcat.getString("price");
                             prodesc = jcat.getString("pro_desc");
+                            procprice = jcat.getString("cross_price");
+                            prosize = jcat.getString("size");
+                            procolor = jcat.getString("color");
+                            proqty = jcat.getString("qty");
+                            bid = jcat.getString("b_id");
+                            bmobile = jcat.getString("b_mobile");
                            /* rating = jcat.getString("product_rating");*/
 
                             map.put("id", proid);
@@ -346,6 +355,12 @@ public class  ProductFragment extends Fragment {
                             map.put("product", proname);
                             map.put("price", proprice);
                             map.put("pro_desc", prodesc);
+                            map.put("cross_price", procprice);
+                            map.put("size", prosize);
+                            map.put("color", procolor);
+                            map.put("qty", proqty);
+                            map.put("b_id", bid);
+                            map.put("b_mobile", bmobile);
                            /* map.put("product_rating", rating);*/
 
                             productList.add(map);
@@ -356,11 +371,20 @@ public class  ProductFragment extends Fragment {
                         recyclerView.setVisibility(View.VISIBLE);
                         error.setVisibility(View.GONE);
 
-                    } else {
-
-                        recyclerView.setVisibility(View.VISIBLE);
-                        error.setVisibility(View.GONE);
+                    }else if (jonj.getString("status").equalsIgnoreCase(
+                            "empty")){
                         Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                        recyclerView.setVisibility(View.GONE);
+                        empty.setVisibility(View.VISIBLE);
+                        error.setVisibility(View.GONE);
+                    }
+                    else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")){
+
+                        Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                        recyclerView.setVisibility(View.GONE);
+                        error.setVisibility(View.VISIBLE);
+                        empty.setVisibility(View.GONE);
 
                     }
                 }

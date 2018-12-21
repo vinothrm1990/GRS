@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -59,15 +60,15 @@ import okhttp3.Response;
 public class SingleWishlistActivity extends AppCompatActivity {
 
     public Button btncart, btnbuy, btnrate;
-    private TextView tvproname, tvproprice, tvprodesc, tvtotalrating, tvnoreview;
-    String proid = "", proname = "", proprice = "", prodesc = "";
-    LinearLayout empty_heart, filled_heart;
+    private TextView tvproname, tvproprice, tvprodesc, tvDealer, tvtotalrating, tvnoreview, tvprocprice, tvproStockIn, tvproStockOut;
+    String proid = "", proname = "", proprice = "", prodesc = "",did="", dmobile="", procprice="", prosize="", procolor="", proqty="";
+    //LinearLayout empty_heart, filled_heart;
     AlertDialog alertDialog;
     public RecyclerView recyclerView;
     private ReviewAdapter reviewAdapter;
     String custid = "";
     private static int numofPage = 0;
-    TextView textItemCount;
+    TextView textItemCount, tvSize, tvColor;
     private ArrayList<HashMap<String,String>> reviewList=new ArrayList<HashMap<String, String>>();
     RecyclerView.LayoutManager mLayoutManager;
     SimpleDateFormat sdf;
@@ -78,13 +79,21 @@ public class SingleWishlistActivity extends AppCompatActivity {
     private ProductSliderAdapter productSliderAdapter;
     private HashMap<String, String> data;
     private MaterialRatingBar ratingBar;
+    LinearLayout noImage, yesImage, button_layout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         data = (HashMap<String, String>) getIntent().getExtras().get("data");
-        proname = data.get("product");
-        getSupportActionBar().setTitle(proname);
+
+        if ( data!=null){
+            proname = data.get("product");
+            getSupportActionBar().setTitle(proname);
+        }else {
+            getSupportActionBar().setTitle("Product Name");
+        }
+
         setContentView(R.layout.activity_single_wishlist);
         Constants.pref = getSharedPreferences("GRS",Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
@@ -96,10 +105,6 @@ public class SingleWishlistActivity extends AppCompatActivity {
 
         new fetchCartCount(this, custid, timestamp).execute();
 
-        proid = data.get("id");
-        proprice = data.get("price");
-        prodesc = data.get("pro_desc");
-
         btncart = findViewById(R.id.btn_addtocart_wish);
         btnbuy = findViewById(R.id.btn_buynow_wish);
         tvproname = findViewById(R.id.wishname_tv);
@@ -108,17 +113,59 @@ public class SingleWishlistActivity extends AppCompatActivity {
         btnrate = findViewById(R.id.wish_ratenow_btn);
         ratingBar = findViewById(R.id.wish_overall_rating_tv);
         tvnoreview = findViewById(R.id.wish_tv_no_review);
-        empty_heart = findViewById(R.id.wish_unchecked_fav_layout);
-        filled_heart = findViewById(R.id.wish_checked_fav_layout);
+        noImage = findViewById(R.id.noimage_layout);
+        yesImage = findViewById(R.id.wishimage_layout);
+        tvSize = findViewById(R.id.wishsize_tv);
+        tvColor = findViewById(R.id.wishcolor_tv);
+        tvprocprice = findViewById(R.id.wishcprice_tv);
+        tvproStockIn = findViewById(R.id.wish_tv_stockin);
+        tvproStockOut = findViewById(R.id.wish_tv_stockout);
+        button_layout = findViewById(R.id.button_layout);
+        tvDealer = findViewById(R.id.wishdealer_tv);
+        /*empty_heart = findViewById(R.id.wish_unchecked_fav_layout);
+        filled_heart = findViewById(R.id.wish_checked_fav_layout);*/
 
         recyclerView = findViewById(R.id.wish_rv_rate);
         mLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(mLayoutManager);
 
-        tvproname.setText(proname);
-        tvproprice.setText("₹\t" + proprice);
-        tvprodesc.setText(prodesc);
-        slider = data.get("image1");
+        if (data != null){
+            proid = data.get("id");
+            proprice = data.get("price");
+            prodesc = data.get("pro_desc");
+            procprice =data.get("cross_price");
+            prosize = data.get("size");
+            procolor = data.get("color");
+            proqty = data.get("qty");
+            did = data.get("b_id");
+            dmobile = data.get("b_mobile");
+
+            tvproname.setText(proname);
+            tvproprice.setText("₹" + proprice);
+            tvprocprice.setText("₹" +procprice);
+            tvprocprice.setPaintFlags(tvprocprice.getPaintFlags()|Paint.STRIKE_THRU_TEXT_FLAG);
+            tvprodesc.setText(prodesc);
+            tvSize.setText(prosize);
+            tvColor.setText(procolor);
+            tvDealer.setText(did);
+            slider = data.get("image1");
+
+            if (prosize.isEmpty()){
+                tvSize.setVisibility(View.GONE);
+            }else {
+                tvSize.setVisibility(View.VISIBLE);
+            }
+
+            if (!proqty.equals("0") && !proqty.isEmpty()){
+                tvproStockIn.setVisibility(View.VISIBLE);
+                tvproStockOut.setVisibility(View.GONE);
+                button_layout.setVisibility(View.VISIBLE);
+            }else {
+                tvproStockIn.setVisibility(View.GONE);
+                tvproStockOut.setVisibility(View.VISIBLE);
+                button_layout.setVisibility(View.GONE);
+            }
+        }
 
         new fetchReview(this, proid).execute();
         new fetchFlag(this, proid, custid, timestamp).execute();
@@ -126,12 +173,21 @@ public class SingleWishlistActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.wish_pager);
         circleIndicator = findViewById(R.id.wish_indicator);
 
-        List<String> sliderlist= Arrays.asList(slider.split(","));
-        numofPage = sliderlist.size();
-        productSliderAdapter= new ProductSliderAdapter(SingleWishlistActivity.this,sliderlist);
-        viewPager.setAdapter(productSliderAdapter);
-        viewPager.setOffscreenPageLimit(3);
-        circleIndicator.setViewPager(viewPager);
+        if (!slider.isEmpty()){
+            yesImage.setVisibility(View.VISIBLE);
+            noImage.setVisibility(View.GONE);
+            String [] list = slider.split(",");
+            List<String> sepList = Arrays.asList(list);
+            ArrayList<String> proList = new ArrayList<String>(sepList);
+            numofPage = proList.size();
+            productSliderAdapter= new ProductSliderAdapter(this,proList);
+            viewPager.setAdapter(productSliderAdapter);
+            viewPager.setOffscreenPageLimit(numofPage);
+            circleIndicator.setViewPager(viewPager);
+        }else {
+            yesImage.setVisibility(View.GONE);
+            noImage.setVisibility(View.VISIBLE);
+        }
 
 
         btnbuy.setOnClickListener(new View.OnClickListener() {
@@ -143,7 +199,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                 String timestamp = sdf.format(now);
 
                 int flag = 1;
-                new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp).execute();
+                new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp, did, dmobile).execute();
                 Constants.cart="1";
                 new fetchCartCount(SingleWishlistActivity.this, custid, timestamp).execute();
 
@@ -158,7 +214,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                 rateDialog();
             }
         });
-        empty_heart.setOnClickListener(new View.OnClickListener() {
+        /*empty_heart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -177,7 +233,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                 filled_heart.setVisibility(View.GONE);
                 new storeWishlist(SingleWishlistActivity.this, custid, proid, flag).execute();
             }
-        });
+        });*/
         btncart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -189,7 +245,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                 if (Constants.cart.equals("0")){
 
                     int flag = 1;
-                    new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp).execute();
+                    new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp, did, dmobile).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
                     new fetchCartCount(SingleWishlistActivity.this, custid, timestamp).execute();
@@ -197,7 +253,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
                 }else if (Constants.cart.equals("1")){
 
                     int flag = 0;
-                    new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp).execute();
+                    new addtoCart(SingleWishlistActivity.this, proid, custid, flag, timestamp, did, dmobile).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
                     new fetchCartCount(SingleWishlistActivity.this, custid, timestamp).execute();
@@ -375,7 +431,7 @@ public class SingleWishlistActivity extends AppCompatActivity {
         int flag;
         ProgressDialog progress;
 
-        public addtoCart(Context context, String proid, String cusid, int flag, String date) {
+        public addtoCart(Context context, String proid, String cusid, int flag, String date, String did, String dmobile) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
@@ -405,6 +461,8 @@ public class SingleWishlistActivity extends AppCompatActivity {
                     .add(Constants.PRODUCT_ID, proid)
                     .add(Constants.cartflag, String.valueOf(flag))
                     .add("date", date)
+                    .add("did", did)
+                    .add("dmobile", dmobile)
                     .build();
             Request request = new Request.Builder()
                     .url(url)
@@ -881,11 +939,11 @@ public class SingleWishlistActivity extends AppCompatActivity {
                             btncart.setText("ADD TO CART");
                         }
                         if (wish_flag.equalsIgnoreCase("1")) {
-                            empty_heart.setVisibility(View.GONE);
-                            filled_heart.setVisibility(View.VISIBLE);
+                            /*empty_heart.setVisibility(View.GONE);
+                            filled_heart.setVisibility(View.VISIBLE);*/
                         } else {
-                            empty_heart.setVisibility(View.VISIBLE);
-                            filled_heart.setVisibility(View.GONE);
+                           /* empty_heart.setVisibility(View.VISIBLE);
+                            filled_heart.setVisibility(View.GONE);*/
                         }if (rate.equalsIgnoreCase("null")){
                             ratingBar.setRating(0);
                         }else {

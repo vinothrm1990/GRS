@@ -23,6 +23,9 @@ import com.app.grs.R;
 import com.app.grs.fragment.SubCategoryFragment;
 import com.app.grs.helper.Constants;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -51,7 +54,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.MyView
         final HashMap<String,String> itemmap = categoryList.get(position);
 
         holder.catName.setText(itemmap.get("cat"));
-        Glide.with(mContext).load(itemmap.get("cat_img_url") + itemmap.get("cat_img_name")).thumbnail(0.1f).into(holder.catImage);
+        Glide.with(mContext)
+                .load(itemmap.get("cat_img_url") + itemmap.get("cat_img_name"))
+                .apply(RequestOptions.centerInsideTransform())
+                .into(holder.catImage);
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {
             @Override

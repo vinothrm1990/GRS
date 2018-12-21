@@ -124,7 +124,7 @@ public class FeaturedAllActivity extends AppCompatActivity {
         private String url = Constants.BASE_URL + Constants.GET_ALL_FEATURED;
         ProgressDialog progress;
         HashMap<String,String> map;
-        String proid, proname, proprice, prodesc, proimg, proslide;
+        String proid, proname, proprice, prodesc, proimg, proslide, cprice, feasize , feacolor, feaqty, bid, bmobile;
 
         public fetchAllFeatured(Context context) {
             this.context = context;
@@ -189,15 +189,27 @@ public class FeaturedAllActivity extends AppCompatActivity {
                             proimg = jcat.getString("image");
                             proname = jcat.getString("product");
                             proprice = jcat.getString("price");
+                            cprice = jcat.getString("cross_price");
                             prodesc = jcat.getString("pro_desc");
                             proslide = jcat.getString("image1");
+                            feasize = jcat.getString("size");
+                            feacolor = jcat.getString("color");
+                            feaqty = jcat.getString("qty");
+                            bid = jcat.getString("b_id");
+                            bmobile = jcat.getString("b_mobile");
 
                             map.put("id", proid);
                             map.put("image", proimg);
                             map.put("product", proname);
                             map.put("price", proprice);
+                            map.put("cross_price", cprice);
                             map.put("pro_desc", prodesc);
                             map.put("image1", proslide);
+                            map.put("size", feasize);
+                            map.put("color", feacolor);
+                            map.put("qty", feaqty);
+                            map.put("b_id", bid);
+                            map.put("b_mobile", bmobile);
 
                             allFeaturedList.add(map);
 

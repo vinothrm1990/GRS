@@ -19,6 +19,8 @@ import com.app.grs.fragment.SubCategoryFragment;
 import com.app.grs.fragment.SubProductFragment;
 import com.app.grs.helper.Constants;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,7 +52,10 @@ public class SubCategoryAdapter extends RecyclerView.Adapter<SubCategoryAdapter.
 
         holder.subcatName.setText(itemmap.get("sub_product"));
 
-        Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("image")).thumbnail(0.1f).into(holder.subcatImage);
+        Glide.with(mContext)
+                .load(Constants.IMAGE_URL + itemmap.get("image"))
+                .apply(RequestOptions.centerInsideTransform())
+                .into(holder.subcatImage);
 
 
         holder.cardView.setOnClickListener(new View.OnClickListener() {

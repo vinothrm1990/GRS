@@ -13,6 +13,8 @@ import android.widget.TextView;
 import com.app.grs.R;
 import com.app.grs.helper.Constants;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,9 +51,12 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.MyViewHolder
 
         holder.ordername.setText(itemmap.get("pname"));
         holder.orderqty.setText(itemmap.get("qty"));
-        holder.orderprice.setText("₹\t" + total);
+        holder.orderprice.setText("₹" + total);
 
-        Glide.with(mContext).load(Constants.IMAGE_URL + itemmap.get("pic")).thumbnail(0.1f).into(holder.orderimage);
+        Glide.with(mContext)
+                .load(Constants.IMAGE_URL + itemmap.get("pic"))
+                .apply(RequestOptions.centerInsideTransform())
+                .into(holder.orderimage);
     }
 
     @Override

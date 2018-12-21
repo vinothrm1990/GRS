@@ -56,7 +56,7 @@ import okhttp3.Response;
 public class SubCategoryFragment extends Fragment {
 
     private RecyclerView recyclerView;
-    private ImageView error;
+    private ImageView error, empty;
     private SubCategoryAdapter subCategoryAdapter;
     private ArrayList<HashMap<String,String>> subcategoryList=new ArrayList<HashMap<String, String>>();
     RecyclerView.LayoutManager mLayoutManager;
@@ -66,6 +66,7 @@ public class SubCategoryFragment extends Fragment {
     int numItemCount;
     SimpleDateFormat sdf;
     Date now;
+    Bundle bundle;
 
     public SubCategoryFragment() {
         // Required empty public constructor
@@ -83,12 +84,13 @@ public class SubCategoryFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_sub_category, container, false);
 
-        Bundle bundle = getArguments();
+        bundle = this.getArguments();
         if (bundle != null){
             categoryname = bundle.getString("catname");
+            ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(categoryname);
+        }else {
+            ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("SubCategory Products");
         }
-
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(categoryname);
 
         Constants.pref = getActivity().getSharedPreferences("GRS",Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
@@ -102,10 +104,11 @@ public class SubCategoryFragment extends Fragment {
 
         new fetchCartCount(getActivity(), cusid, timestamp).execute();
 
-        catname = getArguments().getString("catname");
-        new fetchSubCategory(getActivity(), catname).execute();
+
+        new fetchSubCategory(getActivity(), categoryname).execute();
 
         error = view.findViewById(R.id.error);
+        empty = view.findViewById(R.id.empty);
         recyclerView = view.findViewById(R.id.rv_subcategory);
         mLayoutManager = new GridLayoutManager(getActivity(), 2);
         recyclerView.setLayoutManager(mLayoutManager);
@@ -356,10 +359,19 @@ public class SubCategoryFragment extends Fragment {
                         recyclerView.setVisibility(View.VISIBLE);
                         error.setVisibility(View.GONE);
 
-                    } else {
+                    } else if (jonj.getString("status").equalsIgnoreCase(
+                            "empty")){
+                        Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
+                        recyclerView.setVisibility(View.GONE);
+                        empty.setVisibility(View.VISIBLE);
+                        error.setVisibility(View.GONE);
+                    }
+                    else if (jonj.getString("status").equalsIgnoreCase(
+                            "failed")){
                         Toast.makeText(context, jonj.getString("data"), Toast.LENGTH_SHORT).show();
                         recyclerView.setVisibility(View.GONE);
                         error.setVisibility(View.VISIBLE);
+                        empty.setVisibility(View.GONE);
                     }
                 }else {
 

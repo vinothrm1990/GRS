@@ -229,7 +229,8 @@ public class MyWishListActivity extends AppCompatActivity {
     private class fetchWishlist extends AsyncTask<String, Integer, String> {
 
         private Context context;
-        private String cusid, proid, proname, proimage, proprice, prodesc, flag, slider;
+        private String cusid, proid, proname, proimage, proprice, prodesc, flag, slider, bid,
+        prosize, procolor, proqty, procprice, bmobile;
         private String url = Constants.BASE_URL + Constants.GET_WISHLIST;
         ProgressDialog progress;
         HashMap<String,String> map;
@@ -303,6 +304,12 @@ public class MyWishListActivity extends AppCompatActivity {
                         prodesc=jcat.getString("pro_desc");
                         flag=jcat.getString("wish_flag");
                         slider=jcat.getString("image1");
+                        procprice=jcat.getString("cross_price");
+                        prosize=jcat.getString("size");
+                        procolor=jcat.getString("color");
+                        proqty=jcat.getString("qty");
+                        bid=jcat.getString("b_id");
+                        bmobile=jcat.getString("b_mobile");
 
                         map.put("id",proid);
                         map.put("image",proimage);
@@ -311,6 +318,12 @@ public class MyWishListActivity extends AppCompatActivity {
                         map.put("pro_desc", prodesc);
                         map.put("wish_flag",flag);
                         map.put("image1",slider);
+                        map.put("cross_price",procprice);
+                        map.put("size",prosize);
+                        map.put("color",procolor);
+                        map.put("qty",proqty);
+                        map.put("b_id",bid);
+                        map.put("b_mobile",bmobile);
                         wishlistList.add(map);
 
                     }

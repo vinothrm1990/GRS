@@ -78,7 +78,7 @@ public class PlayStoreUpdate extends AsyncTask<String, Void, String> {
             e.printStackTrace();
         }
         currentVersion = packageInfo.versionName;
-        Log.e("currentVersion", currentVersion);
+        Log.i("currentVersion", currentVersion);
     }
 
     public boolean isNetworkAvailable(Context context) {

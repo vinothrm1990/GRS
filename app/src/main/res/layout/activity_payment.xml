@@ -21,7 +21,7 @@
         android:gravity="center"
         android:textStyle="bold"
         android:textSize="18sp"
-        android:text="Order has been Confirmed..."
+        android:text="Order has been Confirmed."
         android:layout_marginTop="15dp"
         android:layout_below="@+id/success_layout"
         android:layout_width="match_parent"

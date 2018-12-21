@@ -14,7 +14,7 @@
         android:layout_gravity="center"
         android:layout_width="110dp"
         android:layout_height="100dp"
-        android:src="@drawable/grslogo"
+        android:src="@drawable/grs_profile"
         app:civ_border_width="2dp"
         app:civ_border_color="#FF000000"
         android:contentDescription="@string/nav_header_desc" />

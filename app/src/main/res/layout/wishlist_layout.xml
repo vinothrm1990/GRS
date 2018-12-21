@@ -10,12 +10,14 @@
         android:id="@+id/cv_wishlist"
         android:focusable="true"
         android:clickable="true"
+        card_view:cardUseCompatPadding="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:elevation="3dp"
         card_view:cardCornerRadius="3dp">
         <LinearLayout
+            android:id="@+id/wish_layout"
             android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
             android:weightSum="3"
@@ -38,7 +40,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:orientation="vertical"
-                android:layout_weight="2.5"
+                android:layout_weight="1.9"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <TextView
@@ -49,33 +51,47 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Name"
-                    android:maxLines="2"
-                    android:layout_gravity="right"
+                    android:inputType="textMultiLine"
+                    android:layout_gravity="left"
                     android:gravity="center_vertical"
                     android:padding="5dp"
                     android:textStyle="bold"
                     android:textColor="#000000"
                     android:textSize="16sp" />
-                <TextView
+                <LinearLayout
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"
+                    android:orientation="horizontal"
                     android:layout_weight="1"
-                    android:id="@+id/wish_productprice_tv"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Price"
-                    android:padding="5dp"
-                    android:textColor="#000000"
-                    android:textSize="16sp" />
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:id="@+id/wish_productcprice_tv"
+                        android:paddingLeft="5dp"
+                        android:text="Price"
+                        android:layout_gravity="center"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textSize="13sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                    <TextView
+                        android:layout_marginLeft="5dp"
+                       android:layout_gravity="center"
+                        android:layout_weight="1"
+                        android:id="@+id/wish_productprice_tv"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Price"
+                        android:padding="5dp"
+                        android:textColor="#000000"
+                        android:textSize="16sp" />
+                </LinearLayout>
             </LinearLayout>
             <LinearLayout
                 android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
+                android:layout_weight="1"
                 android:id="@+id/delete_layout"
                 android:visibility="visible"
-                android:layout_weight="1"
-                android:paddingRight="15dp"
                 android:layout_width="wrap_content"
                 android:layout_height="80dp">
                 <ImageView
@@ -83,7 +99,7 @@
                     android:src="@drawable/ic_delete_black_24dp"
                     android:layout_weight="2"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="35dp" />
             </LinearLayout>
         </LinearLayout>
     </android.support.v7.widget.CardView>

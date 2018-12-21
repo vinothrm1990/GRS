@@ -21,6 +21,8 @@ import com.app.grs.fragment.FeaturedDetailsFragment;
 import com.app.grs.fragment.SubCategoryFragment;
 import com.app.grs.helper.Constants;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +54,10 @@ public class DiscoverAdapter1 extends RecyclerView.Adapter<DiscoverAdapter1.MyVi
 
         final HashMap<String,String> itemmap = discoverList1.get(position);
 
-        Glide.with(mContext).load(itemmap.get("cat_img_url") + itemmap.get("cat_img_name")).thumbnail(0.1f).into(holder.image);
+        Glide.with(mContext)
+                .load(itemmap.get("cat_img_url") + itemmap.get("cat_img_name"))
+                .apply(RequestOptions.centerInsideTransform())
+                .into(holder.image);
 
         holder.name.setText(itemmap.get("cat"));
 

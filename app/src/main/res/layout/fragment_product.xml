@@ -20,5 +20,12 @@
         android:src="@drawable/error"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
+    <ImageView
+        android:id="@+id/empty"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        android:scaleType="fitCenter"
+        android:src="@drawable/empty_product"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 </FrameLayout>

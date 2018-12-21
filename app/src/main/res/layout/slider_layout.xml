@@ -6,10 +6,5 @@
     <ImageView
         android:id="@+id/iv_image_slider"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        android:adjustViewBounds="true"
-        android:layout_gravity="center"
-        android:src="@drawable/grslogo"
-        android:scaleType="fitCenter" />
+        android:layout_height="match_parent"/>
 </FrameLayout>

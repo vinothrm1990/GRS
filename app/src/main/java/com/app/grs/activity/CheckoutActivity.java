@@ -21,10 +21,14 @@ import com.app.grs.helper.Constants;
 import com.app.grs.helper.GRS;
 import com.libizo.CustomEditText;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import okhttp3.Call;
@@ -42,7 +46,11 @@ public class CheckoutActivity extends AppCompatActivity {
     Button btnOrder;
     private Dialog dialog;
     String subtotal;
+    String id, cart_id;
+    SimpleDateFormat sdf;
+    Date now;
     CartAdapter cartAdapter;
+    ArrayList<HashMap<String,String>> branchList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +65,8 @@ public class CheckoutActivity extends AppCompatActivity {
         proid = data.get("id");
         proname = data.get("product");
         proqty = data.get("qty");*/
+
+       branchList = new ArrayList<>();
 
         totalprice = getIntent().getStringExtra("totalprice");
 
@@ -78,31 +88,33 @@ public class CheckoutActivity extends AppCompatActivity {
 
         Bundle bundle = getIntent().getExtras();
 
-        final String id = bundle.getString("cus_id");
-        String b_name = bundle.getString("name");
-        String b_phone = bundle.getString("mobile_no");
-        String b_email = bundle.getString("email");
-        String b_state = bundle.getString("state");
-        String b_city = bundle.getString("city");
-        String b_post = bundle.getString("post_code");
-        String b_add = bundle.getString("address1");
-        final String cart_id = bundle.getString("cartid");
-        subtotal = bundle.getString("subtotal");
+        if (bundle!=null){
+            id = bundle.getString("cus_id");
+            String b_name = bundle.getString("name");
+            String b_phone = bundle.getString("mobile_no");
+            String b_email = bundle.getString("email");
+            String b_state = bundle.getString("state");
+            String b_city = bundle.getString("city");
+            String b_post = bundle.getString("post_code");
+            String b_add = bundle.getString("address1");
+            cart_id = bundle.getString("cartid");
+            subtotal = bundle.getString("subtotal");
 
-        bname.setText(b_name);
-        bphone.setText(b_phone);
-        bemail.setText(b_email);
-        bstate.setText(b_state);
-        bcity.setText(b_city);
-        bpostcode.setText(b_post);
-        baddress.setText(b_add);
-        dname.setText(b_name);
-        dphone.setText(b_phone);
-        demail.setText(b_email);
-        dstate.setText(b_state);
-        dcity.setText(b_city);
-        dpostcode.setText(b_post);
-        daddress.setText(b_add);
+            bname.setText(b_name);
+            bphone.setText(b_phone);
+            bemail.setText(b_email);
+            bstate.setText(b_state);
+            bcity.setText(b_city);
+            bpostcode.setText(b_post);
+            baddress.setText(b_add);
+            dname.setText(b_name);
+            dphone.setText(b_phone);
+            demail.setText(b_email);
+            dstate.setText(b_state);
+            dcity.setText(b_city);
+            dpostcode.setText(b_post);
+            daddress.setText(b_add);
+        }
 
         final String cusid = Constants.pref.getString("mobileno", "");
 
@@ -133,8 +145,6 @@ public class CheckoutActivity extends AppCompatActivity {
 
 
     }
-
-
 
     private class shipDetails extends AsyncTask<String, Integer, String> {
 
@@ -262,7 +272,6 @@ public class CheckoutActivity extends AppCompatActivity {
 
                                 if (radioButton.isChecked()){
                                     startActivity(new Intent(CheckoutActivity.this, PaymentActivity.class));
-                                    finish();
                                 }
                             }
                         });
@@ -300,4 +309,6 @@ public class CheckoutActivity extends AppCompatActivity {
         // For Internet disconnect checking
         GRS.unregisterReceiver(CheckoutActivity.this);
     }
+
+
 }

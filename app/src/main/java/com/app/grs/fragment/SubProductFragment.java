@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -72,9 +73,9 @@ public class SubProductFragment extends Fragment{
 
     Timer timer;
     public Button btncart, btnbuy, btnrate;
-    private TextView tvproname, tvproprice, tvprodesc, tvtotalrating;
-    String proid = "", proname = "", proprice = "", prodesc = "";
-    TextView textItemCount, tvnoreview;
+    private TextView tvproname, tvproprice, tvprodesc, tvDealer, tvtotalrating, tvprocprice, tvStockIn, tvStockOut;
+    String proid = "", proname = "", proprice = "",did="", dmobile="", prodesc = "", procprice = "", prosize = "", procolor = "", proqty = "";
+    TextView textItemCount, tvnoreview, tvSize, tvColor;
     LinearLayout empty_heart, filled_heart;
     int numItemCount;
     AlertDialog alertDialog;
@@ -94,6 +95,7 @@ public class SubProductFragment extends Fragment{
     private static int numofPage = 0;
     private ProductSliderAdapter productSliderAdapter;
     private MaterialRatingBar ratingBar;
+    LinearLayout noImage, yesImage, button_layout;
 
     public SubProductFragment() {
         // Required empty public constructor
@@ -111,25 +113,20 @@ public class SubProductFragment extends Fragment{
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_sub_product, container, false);
 
+
         data =  (HashMap<String, String>) getArguments().getSerializable("data");
 
-        proid = data.get("id");
-        proname = data.get("product");
-        proprice = data.get("price");
-        prodesc = data.get("pro_desc");
-        slider = data.get("image1");
-
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(proname);
+        if (data !=  null){
+            proid = data.get("id");
+            proname = data.get("product");
+            slider = data.get("image1");
+            ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(proname);
+        }else {
+            ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle("Product Name");
+        }
 
         viewPager = view.findViewById(R.id.slide_pager);
         circleIndicator = view.findViewById(R.id.slide_indicator);
-
-        List<String> sliderlist= Arrays.asList(slider.split(","));
-        numofPage = sliderlist.size();
-        productSliderAdapter= new ProductSliderAdapter(getActivity(),sliderlist);
-        viewPager.setAdapter(productSliderAdapter);
-        viewPager.setOffscreenPageLimit(3);
-        circleIndicator.setViewPager(viewPager);
 
         Constants.pref = getActivity().getSharedPreferences("GRS",Context.MODE_PRIVATE);
         Constants.editor = Constants.pref.edit();
@@ -145,17 +142,76 @@ public class SubProductFragment extends Fragment{
         btnbuy = view.findViewById(R.id.btn_buynow);
         tvproname = view.findViewById(R.id.subproductname_tv);
         tvproprice = view.findViewById(R.id.subproductprice_tv);
+        tvprocprice = view.findViewById(R.id.subproductcprice_tv);
         tvprodesc = view.findViewById(R.id.subproductdesc_tv);
         btnrate = view.findViewById(R.id.ratenow_btn);
         tvnoreview = view.findViewById(R.id.tv_no_review);
         empty_heart = view.findViewById(R.id.unchecked_fav_layout);
         filled_heart = view.findViewById(R.id.checked_fav_layout);
         ratingBar = view.findViewById(R.id.product_rate);
+        noImage = view.findViewById(R.id.noimage_layout);
+        yesImage = view.findViewById(R.id.proimage_layout);
+        tvSize = view.findViewById(R.id.subproductsize_tv);
+        tvColor = view.findViewById(R.id.subproductcolor_tv);
+        tvStockIn = view.findViewById(R.id.subpro_tv_stockin);
+        tvStockOut = view.findViewById(R.id.subpro_tv_stockout);
+        button_layout = view.findViewById(R.id.button_layout);
+        tvDealer = view.findViewById(R.id.subproductdealer_tv);
 
-        tvproname.setText(proname);
-        tvproprice.setText("₹\t" + proprice);
-        tvprodesc.setText(prodesc);
-        tvproname.setSelected(true);
+        if (data != null){
+
+            proprice = data.get("price");
+            prodesc = data.get("pro_desc");
+            procprice = data.get("cross_price");
+            prosize = data.get("size");
+            procolor = data.get("color");
+            proqty = data.get("qty");
+            did  = data.get("b_id");
+            dmobile  = data.get("b_mobile");
+
+            tvproname.setText(proname);
+            tvproprice.setText("₹" + proprice);
+            tvprodesc.setText(prodesc);
+            tvproname.setSelected(true);
+            tvSize.setText(prosize);
+            tvDealer.setText(did);
+            tvColor.setText(procolor);
+            tvprocprice.setText("₹" +procprice);
+            tvprocprice.setPaintFlags(tvprocprice.getPaintFlags()|Paint.STRIKE_THRU_TEXT_FLAG);
+
+            if (prosize.isEmpty()){
+                tvSize.setVisibility(View.GONE);
+            }else {
+                tvSize.setVisibility(View.VISIBLE);
+            }
+
+            if (!proqty.equals("0") && !proqty.isEmpty()){
+                tvStockIn.setVisibility(View.VISIBLE);
+                tvStockOut.setVisibility(View.GONE);
+                button_layout.setVisibility(View.VISIBLE);
+            }else {
+                tvStockIn.setVisibility(View.GONE);
+                tvStockOut.setVisibility(View.VISIBLE);
+                button_layout.setVisibility(View.GONE);
+            }
+        }
+
+
+        if (!slider.isEmpty()){
+            yesImage.setVisibility(View.VISIBLE);
+            noImage.setVisibility(View.GONE);
+            String [] list = slider.split(",");
+            List<String> sepList = Arrays.asList(list);
+            ArrayList<String> proList = new ArrayList<String>(sepList);
+            numofPage = proList.size();
+            productSliderAdapter= new ProductSliderAdapter(getActivity(),proList);
+            viewPager.setAdapter(productSliderAdapter);
+            viewPager.setOffscreenPageLimit(numofPage);
+            circleIndicator.setViewPager(viewPager);
+        }else {
+            yesImage.setVisibility(View.GONE);
+            noImage.setVisibility(View.VISIBLE);
+        }
 
         new fetchSubProducts(getActivity(), proid, custid, timestamp).execute();
         new fetchReview(getActivity(), proid).execute();
@@ -174,7 +230,7 @@ public class SubProductFragment extends Fragment{
                 String timestamp = sdf.format(now);
 
                 int flag = 1;
-                new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
+                new addtoCart(getActivity(), proid, custid, flag, timestamp, did, dmobile).execute();
                 Constants.cart="1";
                 //new fetchCartCount(getActivity(), custid, timestamp).execute();
                 startActivity(new Intent(getActivity(), MyCartActivity.class));
@@ -220,7 +276,7 @@ public class SubProductFragment extends Fragment{
                 if (Constants.cart.equals("0")){
 
                     int flag = 1;
-                    new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
+                    new addtoCart(getActivity(), proid, custid, flag, timestamp, did, dmobile).execute();
                     Constants.cart="1";
                     btncart.setText("REMOVE FROM CART");
                     new fetchCartCount(getActivity(), custid, timestamp).execute();
@@ -229,7 +285,7 @@ public class SubProductFragment extends Fragment{
 
 
                     int flag = 0;
-                    new addtoCart(getActivity(), proid, custid, flag, timestamp).execute();
+                    new addtoCart(getActivity(), proid, custid, flag, timestamp, did, dmobile).execute();
                     Constants.cart="0";
                     btncart.setText("ADD TO CART");
                     new fetchCartCount(getActivity(), custid, timestamp).execute();
@@ -358,7 +414,7 @@ public class SubProductFragment extends Fragment{
         int flag;
         ProgressDialog progress;
 
-        public addtoCart(Context context, String proid, String cusid, int flag, String date) {
+        public addtoCart(Context context, String proid, String cusid, int flag, String date, String did, String dmobile) {
             this.context = context;
             this.proid = proid;
             this.cusid = cusid;
@@ -388,6 +444,8 @@ public class SubProductFragment extends Fragment{
                     .add(Constants.PRODUCT_ID, proid)
                     .add(Constants.cartflag, String.valueOf(flag))
                     .add("date", date)
+                    .add("did", did)
+                    .add("dmobile", dmobile)
                     .build();
             Request request = new Request.Builder()
                     .url(url)

@@ -82,7 +82,7 @@ public class HomeActivity extends AppCompatActivity
         setContentView(R.layout.activity_home);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("GRS");
+        getSupportActionBar().setTitle("GRS ONLINE Shopping");
 
         new PlayStoreUpdate(getApplicationContext(), this).execute();
 
@@ -90,7 +90,7 @@ public class HomeActivity extends AppCompatActivity
         Constants.editor = Constants.pref.edit();
 
         cusid = Constants.pref.getString("mobileno", "");
-        new fetchProfileImage(HomeActivity.this).execute();
+        /*new fetchProfileImage(HomeActivity.this).execute();*/
 
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.content_frame, new HomeFragment());
@@ -309,8 +309,8 @@ public class HomeActivity extends AppCompatActivity
         alertDialog.show();
 
     }
-    
-    private class fetchProfileImage extends AsyncTask<String,Integer,String>{
+
+    /*private class fetchProfileImage extends AsyncTask<String,Integer,String>{
 
         private Context context;
         private String url = Constants.BASE_URL + Constants.GET_PROFILE;
@@ -329,6 +329,7 @@ public class HomeActivity extends AppCompatActivity
             progress.setMessage("Please wait ....");
             progress.setTitle("Loading");
             progress.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progress.setCancelable(false);
             progress.show();
 
         }
@@ -385,13 +386,15 @@ public class HomeActivity extends AppCompatActivity
                     Constants.editor.putString("userpicurl", GetSet.getUserpicurl());
                     Constants.editor.commit();
 
+                }else if (jonj.getString("status").equalsIgnoreCase(
+                        "failed")){
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
         }
-    }
+    }*/
 
     private class fetchProfile extends AsyncTask<String, Integer, String>{
 
@@ -465,16 +468,15 @@ public class HomeActivity extends AppCompatActivity
                     username = object.getString("name");
                     userpicpath = object.getString("userimageurl");
 
-                    if(userpicpath != null){
+                    if(userpicpath != null && userpicpath.equals("")){
                         url = userpicpath;
                         Glide.with(HomeActivity.this)
                                 .load(url)
-
                                 .into(circleImageView);
                     }else {
                         Glide
                                 .with(HomeActivity.this)
-                                .load(R.drawable.grslogo)
+                                .load(R.drawable.grs_profile)
                                 .into(circleImageView);
                     }
                     name.setText(username);
